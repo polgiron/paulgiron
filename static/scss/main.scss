@@ -1,0 +1,53 @@
+@import "base/variables";
+@import "base/base";
+// @import "base/animation";
+@import "base/space";
+
+body {
+  background: #ECECEC;
+  color: $color-gray;
+}
+
+.main-wrapper {
+  height: 100%;
+  padding: 4rem;
+}
+
+h1 {
+  font-size: 4.5rem;
+  font-weight: 300;
+  line-height: 1;
+
+  // @media @mobile{
+  //   font-size: 3.5rem;
+  // }
+}
+
+h2 {
+  font-size: 2rem;
+  font-weight: 300;
+
+  // @media @mobile{
+  //   // font-size: 7vw;
+  //   font-size: 1.5rem;
+  // }
+}
+
+.contact-wrapper {
+  margin-top: 2rem;
+  line-height: 1.5;
+
+  // @media @mobile{
+  //   font-size: 6vw;
+  //   font-size: 1.3rem;
+  // }
+
+  a {
+    font-size: 1.2rem;
+    font-weight: 300;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}

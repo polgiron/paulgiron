@@ -1,0 +1,107 @@
+@import url("base.less");
+
+// COLORS
+@bgColor : #2f343f;
+
+@blue : #3498db;
+@orange : #e67e22;
+@red : #e74c3c;
+
+@mainColor : rgba(52, 152, 219, 1);
+@mainColorLighter : rgba(52, 152, 219, .2);
+
+// SIZE
+@sunRadius : 10vw;
+@sunBorderSize : 1vw;
+@orbitBorderSize : .1vw;
+
+body{
+	background: @bgColor;
+}
+
+.planetWrapperTemplate(@r: 200px, @speed: 10s){
+	.animated(@speed);
+	width: @r;
+	position: absolute;
+	z-index: 0;
+
+	height: @r;
+	left:  -@r / 2 + @sunRadius / 2 - @sunBorderSize;
+	top:  -@r / 2 + @sunRadius / 2 - @sunBorderSize;
+	.border-radius(100%);
+	border: @orbitBorderSize dashed rgba(255, 255, 255, 0.2);
+	// border: .2vw dashed transparent;
+}
+.planetTemplate(@d: 100px, @planetBg){
+	width: @d;
+	height: @d;
+	.border-radius(100%);
+	// background: @planetBg;
+	background: @mainColor;
+	// .box-shadow(0 0 6px rgba(0, 0, 0, 0.5));
+	.box-shadow(0 0 6px @mainColor);
+	// border: 2px solid @bgColor;
+	
+	position: absolute;
+	left: 50%;
+	margin-left: -@d / 2;
+	top: -@d / 2 - @orbitBorderSize / 2;
+}
+
+
+// ********************************************************
+// MOON
+
+.moonWrapperTemplate(@r: 200px, @main_planet_r: 400px, @speed: 10s){
+	.animated(@speed);
+	width: @r;
+	position: absolute;
+	z-index: 0;
+
+	height: @r;
+	left:  -@r / 2 + @main_planet_r / 2 - @orbitBorderSize;
+	top:  -@r / 2- @orbitBorderSize / 2;
+	.border-radius(100%);
+	border: @orbitBorderSize dashed rgba(255, 255, 255, 0.2);
+}
+
+
+// ********************************************************
+// FUNCTIONS
+
+@-ms-keyframes spin {
+    from { -ms-transform: rotate(-90deg); }
+    to { -ms-transform: rotate(270deg); }
+}
+@-moz-keyframes spin {
+    from { -moz-transform: rotate(-90deg); }
+    to { -moz-transform: rotate(270deg); }
+}
+@-webkit-keyframes spin {
+    from { -webkit-transform: rotate(-90deg); }
+    to { -webkit-transform: rotate(270deg); }
+}
+@keyframes spin {
+    from { transform:rotate(-90deg); }
+    to { transform:rotate(270deg); }
+}
+
+.animated(@speed){
+	-webkit-animation-name: spin;
+    -webkit-animation-duration: @speed;
+    -webkit-animation-iteration-count: infinite;
+    -webkit-animation-timing-function: linear;
+    -moz-animation-name: spin;
+    -moz-animation-duration: @speed;
+    -moz-animation-iteration-count: infinite;
+    -moz-animation-timing-function: linear;
+    -ms-animation-name: spin;
+    -ms-animation-duration: @speed;
+    -ms-animation-iteration-count: infinite;
+    -ms-animation-timing-function: linear;
+    
+    animation-name: spin;
+    animation-duration: @speed;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+}
