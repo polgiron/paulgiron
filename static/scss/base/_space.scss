@@ -42,7 +42,6 @@ $orbit-border-color: rgba(0, 0, 0, 0);
   top:  -$r / 2 + $sun-radius / 2;
   border-radius: 100%;
   border: $orbit-border-width dashed $orbit-border-color;
-
   background: rgba(0, 0, 0, .07);
 }
 
@@ -70,6 +69,7 @@ $orbit-border-color: rgba(0, 0, 0, 0);
   top:  -$r / 2- $orbit-border-width / 2;
   border-radius: 100%;
   border: $orbit-border-width dashed $orbit-border-color;
+  background: rgba(0, 0, 0, .07);
 }
 
 #sun {
