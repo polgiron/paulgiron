@@ -1,0 +1,73 @@
+
+.border-radius(@radius:5px) {
+  -moz-border-radius: @radius;
+  -webkit-border-radius: @radius;
+  -khtml-border-radius: @radius;
+  -o-border-radius: @radius;
+  -ms-border-radius: @radius;
+  border-radius: @radius;
+}
+
+.background-cover(@url){
+	background: url(@url) no-repeat center center;
+
+	background-size: cover;
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
+	-ms-background-size: cover;
+	-o-background-size: cover;
+}
+
+.box-shadow(@arg:0 0 8px rgba(0,0,0,0.6)){
+    box-shadow: @arg;
+    -o-box-shadow: @arg;
+    -ms-box-shadow: @arg;
+    -moz-box-shadow: @arg;  
+    -webkit-box-shadow: @arg; 
+}
+
+/* Ombre sur le texte */
+.text-shadow(@right:1px, @top:1px, @depth:0px, @color:#666){
+  text-shadow : @right @top @depth @color;
+  -webkit-text-shadow : @right @top @depth @color;
+  -moz-text-shadow : @right @top @depth @color;
+  -o-text-shadow : @right @top @depth @color;
+  -ms-text-shadow : @right @top @depth @color;
+}
+
+/* Transition */
+.transition (@property: all, @delay: 0.1s, @easing: linear){
+  -webkit-transition: @property @delay @easing;
+  -moz-transition: @property @delay @easing;
+  -o-transition: @property @delay @easing;
+  -ms-transition: @property @delay @easing;
+  transition: @property @delay @easing;
+}
+
+/* box sizing */
+.box-sizing (@border:border-box){
+  -webkit-box-sizing: @border;
+  -moz-box-sizing: @border;
+  -o-box-sizing: @border;
+  -ms-box-sizing: @border;
+  box-sizing: @border;
+}
+
+/* Créer un degradé */
+.linear-gradient(@c1:rgba(0,0,0,0.7), @c2:rgba(0,0,0,0.8), @dir:top, @percentc1:0%, @percentc2:100%) {
+	background: @c1;
+	background: -moz-linear-gradient(@dir, @c1 @percentc1, @c2 @percentc2); /* FF3.6+ */
+	background: -webkit-gradient(linear, left @dir, right @dir, color-stop(@percentc1,@c1), color-stop(@percentc2,@c2)); /* Chrome,Safari4+ */
+	background: -webkit-linear-gradient(@dir, @c1 @percentc1, @c2 @percentc2);/* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(@dir, @c1 @percentc1, @c2 @percentc2);/* Opera 11.10+ */
+	background: -ms-linear-gradient(@dir, @c1 @percentc1, @c2 @percentc2);/* IE10+ */
+	background: linear-gradient(@dir, @c1 @percentc1, @c2 @percentc2);/* W3C */
+}
+
+.rotate(@deg:0deg){
+    -moz-transform: rotate(@deg);
+    -o-transform: rotate(@deg);
+    -ms-transform: rotate(@deg);
+    -webkit-transform: rotate(@deg);
+    transform: rotate(@deg);
+}

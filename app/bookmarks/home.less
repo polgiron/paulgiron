@@ -1,0 +1,301 @@
+@import url("common/less/common.less");
+
+@bgColor : #ecf0f1;
+// @mainColor : rgba(149, 165, 166, 1);
+// @mainColorLight : rgba(149, 165, 166, .6);
+// @mainColor : rgba(231, 76, 60,1.0);
+// @mainColorLight : rgba(231, 76, 60, .6);
+@mainColor : rgba(52, 73, 94,1.0);
+@mainColorLight : rgba(52, 73, 94, .6);
+
+body {
+	background: @bgColor;
+	// color: #bdc3c7;
+	color: @mainColor;
+}
+
+#main-wrapper {
+	max-width: 600px;
+	margin: auto;
+	margin-top: 3em;
+	padding: 1em;
+
+	@media @mobile {
+		margin-top: 0;
+	}
+}
+
+header {
+	// text-align: center;
+	// display: flex;
+	// align-items: center;
+	// flex-wrap: wrap;
+	
+	h1 {
+		font-size: 3rem;
+		font-weight: 300;
+		line-height: 1;
+	}
+
+	#search-wrapper {
+		// margin-left: auto;
+		padding: .3em .6em;
+		background: white;
+		border: 1px solid @mainColor;
+		.border-radius(3px);
+		display: flex;
+		align-items: center;
+		margin-top: 1em;
+
+		// @media @mobile{
+		// 	margin-left: 0;
+		// 	width: 100%;
+		// }
+
+		input{
+			border: 0;
+			background: transparent;
+			margin-right: .6em;
+			flex: 1;
+		}
+	}
+}
+
+#add-bookmark-wrapper {
+	// border: 1px dashed @mainColor;
+	// .border-radius(3px);
+	// padding: .5em;
+	margin-top: 1em;
+
+	@media @mobile {
+		margin-top: 2em;
+	}
+
+	.content {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+	}
+
+	input {
+		padding: .3em .6em;
+		background: white;
+		border: 1px solid @mainColor;
+		.border-radius(3px);
+		flex: 1;
+		margin-right: .5em;
+
+		@media @mobile {
+			width: 100%;
+			flex: none;
+			margin-right: 0;
+
+			&:first-child {
+				margin-bottom: .5em;
+			}
+		}
+	}
+
+	#add-bookmark {
+		background: transparent;
+		border: 1px solid @mainColor;
+		padding: .3em .6em;
+		.border-radius(3px);
+		margin-left: auto;
+		.transition();
+
+		&:hover {
+			background: @mainColor;
+			color: @bgColor;
+		}
+
+		i {
+			margin-right: .2em;
+		}
+
+		@media @mobile {
+			width: 100%;
+			margin-top: .5em;
+		}
+	}
+
+	.error {
+		margin-top: 1em;
+		display: none;
+	}
+}
+
+#bookmarks-list {
+	margin-top: 1em;
+
+	@media @mobile {
+		margin-top: 2em;
+	}
+
+	.page {
+		// min-height: 200px;
+		// background: white;
+		display: none;
+	}
+
+	.bookmark-entry {
+		padding: .5em;
+		// .transition();
+
+		// &:hover{
+		// 	opacity: .8;
+		// }
+
+		&:nth-child(2n + 1) {
+			background: @mainColorLight;
+			color: @bgColor;
+		}
+
+		.content {
+			display: flex;
+			align-items: center;
+			flex-wrap: wrap;
+		}
+
+		input {
+			padding: .3em .6em;
+			background: transparent;
+			border: 1px solid transparent;
+			.border-radius(3px);
+
+			&:first-child {
+				margin-right: .5em;
+			}
+
+			&.edit {
+				background: white;
+				border-color: @mainColor;
+				color: @mainColor;
+			}
+
+			@media @mobile {
+				width: 100%;
+
+				&:first-child {
+					margin-right: 0;
+				}
+			}
+		}
+
+		.url {
+			flex: 1;
+			margin-right: 1em;
+
+			@media @mobile {
+				margin-right: 0;
+				flex: none;
+				margin: .5em 0;
+			}
+		}
+
+		.tools-wrapper {
+			margin-left: auto;
+			display: flex;
+			align-items: center;
+
+			// @media @mobile {
+			// 	margin-left: 0;
+			// }
+
+			li {
+				margin-right: .3em;
+				cursor: pointer;
+
+				&:last-child {
+					margin-right: 0;
+				}
+			}
+
+			a {
+				position: relative;
+				top: 2px;
+			}
+
+			.save-bookmark {
+				display: none;
+			}
+		}
+
+		.error {
+			display: none;
+			margin-top: 1em;
+		}
+	}
+}
+
+#pagination {
+	margin: 1em 0;
+	display: flex;
+	
+	.content{
+		margin: auto;
+		display: flex;
+		align-items: center;
+	}
+
+	#prev,
+	#next {
+		border: 1px solid @mainColor;
+		color: white;
+		background: @mainColorLight;
+		padding: .3em .6em;
+		.border-radius(3px);
+		cursor: pointer;
+		display: none;
+		font-size: .9em;
+
+		&:hover{
+			opacity: .8;
+		}
+	}
+
+	#prev{
+		margin-right: .5em;
+	}
+
+	#paginationList{
+		// border: 1px solid @mainColor;
+		// color: white;
+		// background: @mainColorLight;
+		// .border-radius(3px);
+		margin-right: .5em;
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		overflow: hidden;
+
+		li{
+			border-right: 1px solid @mainColor;
+			padding: .3em .6em;
+			cursor: pointer;
+			font-size: .9em;
+
+			border: 1px solid @mainColor;
+			color: white;
+			background: @mainColorLight;
+			.border-radius(3px);
+			margin-right: .5em;
+			margin-bottom: .5em;
+
+			&:last-child{
+				// border-right: 0;
+
+				margin-right: 0;
+			}
+
+			&:hover{
+				opacity: .8;
+			}
+
+			&.active{
+				background: rgba(255, 255, 255, .7);
+				color: @mainColor;
+			}
+		}
+	}
+}

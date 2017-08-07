@@ -1,0 +1,108 @@
+// Pas besoin d'utiliser normalize si on utilise bootstrap
+@import "normalize.less";
+// @import "bootstrap-responsive.min.less";
+// @import "bootstrap-full.min.less";
+// @import "bootstrap/bootstrap.less";
+
+/******* GENERAL RESET *******/
+html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em,
+font, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody,
+ tfoot, thead, tr, th, td {
+	border: 0pt none;
+	font-family: inherit;
+	font-size: 100%;
+	font-style: inherit;
+	font-weight: inherit;
+	margin: 0pt;
+	padding: 0pt;
+	vertical-align: baseline;
+}
+
+@import "functions.less";
+@import "font.less";
+// @import "../font-awesome/less/font-awesome.less";
+
+// CLEARFIX 
+.clearfix {
+    *zoom: 1;
+
+    &:before,
+    :after {
+	    content: " ";
+	    display: table;
+	}
+	&:after {
+	    clear: both; 
+	}
+}
+
+// BOX SIZING
+*, *:before, *:after{
+	.box-sizing();
+}
+
+// LINKS
+a{
+	outline: 0;
+	text-decoration: none;
+	color: inherit !important;
+}
+
+// LISTS
+li{
+	list-style: none;
+}
+
+// GENERAL
+.underline,
+.hoverunderlined:hover{
+	text-decoration: underline;
+}
+img{
+	display: block;
+	width: 100%;
+}
+.alinea{
+	display: inline-block;
+	width: 45px;
+}
+
+// NO TEXT SELECTION
+.noselect {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+// FIREFOX OUTLINE
+*{
+	outline: 0 !important;
+
+	&:focus,&:active{
+		outline: 0 !important;
+	}
+}
+*::-moz-focus-inner {
+	border: 0;
+	outline: 0;
+}
+
+// TEXT SELECTION
+/*p::selection {
+	background: transparent;
+	color: red;
+}
+p::-moz-selection {
+	background: transparent;
+	color: red;
+}*/
+
+/*RESPONSIVE DESIGN*/
+@mobile:				~"only screen and (max-width: 767px)";
+@biggerThanMobile:		~"only screen and (min-width: 767px)";
+@small:					~"only screen and (max-width: 992px)";
+@biggerThanSmall:		~"only screen and (min-width: 992px)";
+@big:					~"only screen and (min-width: 1200px)";
