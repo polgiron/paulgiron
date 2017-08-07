@@ -20,6 +20,18 @@ $orbit-border-color: rgba(0, 0, 0, 0);
   }
 }
 
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: scale(.8);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 @mixin planet-wrapper-template($r: 200px, $speed: 10s) {
   @include rotate($speed);
   width: $r;
@@ -30,6 +42,8 @@ $orbit-border-color: rgba(0, 0, 0, 0);
   top:  -$r / 2 + $sun-radius / 2;
   border-radius: 100%;
   border: $orbit-border-width dashed $orbit-border-color;
+
+  background: rgba(0, 0, 0, .07);
 }
 
 @mixin planet-template($d: 100px, $bg: $main-color){
@@ -42,6 +56,8 @@ $orbit-border-color: rgba(0, 0, 0, 0);
   left: 50%;
   margin-left: -$d / 2;
   top: -$d / 2 - $orbit-border-width / 2;
+
+  background: linear-gradient(135deg, rgba(118,118,118,1) 0%,rgba(118,118,118,1) 50%,rgba(91,91,91,1) 51%,rgba(91,91,91,1) 100%);
 }
 
 @mixin moon-wrapper-template($r: 200px, $planet-r: 400px, $speed: 10s){
@@ -60,10 +76,14 @@ $orbit-border-color: rgba(0, 0, 0, 0);
   width: $sun-radius;
   height: $sun-radius;
   position: fixed;
-  right: 150px;
-  bottom: 150px;
+  right: 6rem;
+  bottom: 6rem;
   border-radius: 100%;
   background: $main-color;
+
+  background: linear-gradient(135deg, rgba(118,118,118,1) 0%,rgba(118,118,118,1) 50%,rgba(91,91,91,1) 51%,rgba(91,91,91,1) 100%);
+
+  animation: fade-in .3s ease-out .6s both;
 }
 
 #mercury {
@@ -72,7 +92,11 @@ $orbit-border-color: rgba(0, 0, 0, 0);
   $speed: 10s;
   $bg: #F4D03F;
 
-  @include planet-wrapper-template($r, $speed);
+  animation: fade-in .3s ease-out .6s both;
+
+  .planet-wrapper {
+    @include planet-wrapper-template($r, $speed);
+  }
 
   .planet {
     @include planet-template($pr, $bg);
@@ -85,7 +109,11 @@ $orbit-border-color: rgba(0, 0, 0, 0);
   $speed: 7s;
   $bg: #F2784B;
 
-  @include planet-wrapper-template($r, $speed);
+  animation: fade-in .3s ease-out .7s both;
+
+  .planet-wrapper {
+    @include planet-wrapper-template($r, $speed);
+  }
 
   .planet{
     @include planet-template($pr, $bg);
@@ -98,7 +126,11 @@ $orbit-border-color: rgba(0, 0, 0, 0);
   $speed: 15s;
   $bg: #6BB9F0;
 
-  @include planet-wrapper-template($planet-r, $speed);
+  animation: fade-in .3s ease-out .8s both;
+
+  .planet-wrapper {
+    @include planet-wrapper-template($planet-r, $speed);
+  }
 
   .planet{
     @include planet-template($pr, $bg);
@@ -119,12 +151,17 @@ $orbit-border-color: rgba(0, 0, 0, 0);
 }
 
 #mars {
-  $r: 65vw;
+  // $r: 65vw;
+  $r: 54vw;
   $pr: 4vw;
   $speed: 30s;
   $bg: #16a085;
 
-  @include planet-wrapper-template($r, $speed);
+  animation: fade-in .3s ease-out .9s both;
+
+  .planet-wrapper {
+    @include planet-wrapper-template($r, $speed);
+  }
 
   .planet{
     @include planet-template($pr, $bg);
@@ -132,12 +169,17 @@ $orbit-border-color: rgba(0, 0, 0, 0);
 }
 
 #neptune {
-  $r: 90vw;
+  // $r: 90vw;
+  $r: 68vw;
   $pr: 2vw;
   $speed: 15s;
   $bg: #C0392B;
 
-  @include planet-wrapper-template($r, $speed);
+  animation: fade-in .3s ease-out 1s both;
+
+  .planet-wrapper {
+    @include planet-wrapper-template($r, $speed);
+  }
 
   .planet{
     @include planet-template($pr, $bg);
