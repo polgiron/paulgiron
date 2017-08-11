@@ -84,6 +84,11 @@ $orbit-border-color: rgba(0, 0, 0, 0);
   background: linear-gradient(135deg, rgba(118,118,118,1) 0%,rgba(118,118,118,1) 50%,rgba(91,91,91,1) 51%,rgba(91,91,91,1) 100%);
 
   animation: fade-in .3s ease-out .6s both;
+
+  @media (max-width: $screen-xs-max) {
+    right: 10vmin;
+    bottom: 10vmin;
+  }
 }
 
 #mercury {
