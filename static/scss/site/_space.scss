@@ -80,6 +80,7 @@ $orbit-border-color: rgba(0, 0, 0, 0);
   bottom: 6rem;
   border-radius: 100%;
   background: $main-color;
+  z-index: 10;
 
   background: linear-gradient(135deg, rgba(118,118,118,1) 0%,rgba(118,118,118,1) 50%,rgba(91,91,91,1) 51%,rgba(91,91,91,1) 100%);
 
