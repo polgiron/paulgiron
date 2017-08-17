@@ -1,5 +1,6 @@
-Photol.App = function() {
-  new Photol.Main();
+PG.App = function() {
+  // new PG.Main();
+  new PG.Particles();
 };
 
-var app = new Photol.App();
+var app = new PG.App();

@@ -1,1 +1,1 @@
-var Photol = Photol || {};
+var PG = PG || {};
