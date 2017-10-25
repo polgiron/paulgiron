@@ -75,7 +75,7 @@ $orbit-border-color: rgba(0, 0, 0, 0);
 #sun {
   width: $sun-radius;
   height: $sun-radius;
-  position: fixed;
+  position: absolute;
   right: 6rem;
   bottom: 6rem;
   border-radius: 100%;
