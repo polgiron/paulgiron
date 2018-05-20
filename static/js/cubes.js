@@ -175,7 +175,7 @@ PG.Cubes = function() {
   });
 
   this.addCube_({
-    x: 2.5,
+    x: 2.25,
     y: -1.2,
     z: 1.5,
     size1: .5,
@@ -201,12 +201,29 @@ PG.Cubes = function() {
   this.start_();
 
   window.addEventListener('resize', this.onWindowResize_.bind(this), false);
+  document.addEventListener('mousemove', this.onMouseMove_.bind(this), false);
 };
 
 PG.Cubes.prototype.onWindowResize_ = function() {
   this.camera_.aspect = window.innerWidth / window.innerHeight;
   this.camera_.updateProjectionMatrix();
   this.renderer_.setSize(window.innerWidth, window.innerHeight);
+};
+
+PG.Cubes.prototype.onMouseMove_ = function(event) {
+  var x = event.clientX;
+  // var y = event.clientY;
+  var length = window.innerWidth / 2;
+  var toY = 4;
+  // var delta = 3;
+
+  if (x < window.innerWidth / 2) {
+    for (var i = 0; i < this.cubes_.length; i++) {
+      // var toY = -(this.cubes_[i].defaultY - delta);
+      var cubeY = -(toY - ((toY + this.cubes_[i].defaultY) * x / length));
+      this.cubes_[i].position.y = cubeY;
+    }
+  }
 };
 
 PG.Cubes.prototype.addHelpers_ = function() {
