@@ -40,7 +40,7 @@ PG.Cubes = function() {
   this.cubeWrapper_ = new THREE.Object3D();
   this.cubes_ = [];
   this.delay_ = 30;
-  this.speed_ = 600
+  this.speed_ = 700
 
   this.addCube_({
     x: 0,
