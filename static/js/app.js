@@ -1,6 +1,11 @@
 PG.App = function() {
-  // new PG.Main();
-  new PG.Particles();
+  if ($('body').hasClass('space')) {
+    new PG.Particles();
+  }
+  else if ($('body').hasClass('cubes')) {
+    new PG.Cubes();
+    new PG.CubesText();
+  }
 };
 
 var app = new PG.App();

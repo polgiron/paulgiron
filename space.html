@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>Paul Giron</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400" rel="stylesheet">
+  <link href="static/favicon.png" rel="shortcut icon">
+
+  <link rel="stylesheet" href="static/css/main.min.css">
+</head>
+<body class="space">
+  <main class="main-wrapper">
+    <div class="space__infos">
+      <h1 class="heading-1">Paul Giron</h1>
+      <h2 class="heading-2">Web developer</h2>
+      <ul class="contact-list">
+        <li><a href="mailto:pol.giron@gmail.com">pol.giron@gmail.com</a></li>
+        <li><a href="tel:+642041568116">+64 2041 568 116</a></li>
+      </ul>
+      <ul class="theme-list">
+        <li><a class="theme-space" href="/index.html"><span>></span>cubes</a></li>
+      </ul>
+    </div>
+    <div id="sun">
+      <div id="mercury" data-depth=".1">
+        <div class="planet-wrapper">
+          <div class="planet"></div>
+        </div>
+      </div>
+      <div id="venus" data-depth=".3">
+        <div class="planet-wrapper">
+          <div class="planet"></div>
+        </div>
+      </div>
+      <div id="earth" data-depth=".5">
+        <div class="planet-wrapper">
+          <div class="planet"></div>
+          <div id="moon">
+            <div class="moon"></div>
+          </div>
+        </div>
+      </div>
+      <div id="mars" data-depth=".8">
+        <div class="planet-wrapper">
+          <div class="planet"></div>
+        </div>
+      </div>
+      <div id="neptune" data-depth="1">
+        <div class="planet-wrapper">
+          <div class="planet"></div>
+        </div>
+      </div>
+    </div>
+
+    <canvas id="stars" width="500" height="500"></canvas>
+    <div id="overlay"></div>
+  </main>
+
+
+  <script src="static/js/lib/jquery-2.1.4.min.js"></script>
+  <!-- <script src="static/js/lib/jquery.parallax.js"></script> -->
+  <script src="static/js/base.js"></script>
+  <script src="static/js/particles.js"></script>
+  <script src="static/js/app.js"></script>
+</body>
+</html>
