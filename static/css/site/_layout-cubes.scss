@@ -17,27 +17,29 @@ body.cubes {
   bottom: 4rem;
   color: $color-white-2;
 
+  @media (max-width: $screen-xs-max) {
+    left: auto;
+    bottom: auto;
+    right: 2rem;
+    top: 2rem;
+  }
+
   h1 {
     font-size: 3rem;
     font-weight: 300;
+
+    @media (max-width: $screen-xs-max) {
+      font-size: 1.5rem;
+    }
   }
 
   span {
-    // display: inline-block;
     opacity: 0;
-    // transform: translate3d(-40%, 0, 0);
-    // transform: scale(.6);
-    transition: all 2s ease-out;
+    transition: opacity 2s ease-out;
 
     &.is-visible {
       opacity: 1;
-      // transform: translate3d(0, 0, 0);
-      // transform: scale(1);
     }
-
-    // &:nth-child(4) {
-    //   margin-right: .8rem;
-    // }
   }
 
   ul {
