@@ -4,7 +4,7 @@ PG.CubesText = function() {
   this.addChars_('Paul Giron', '.heading-1');
   this.addChars_('Web developer', '.heading-2');
   this.addChars_('pol.giron@gmail.com', '.email');
-  this.addChars_('+64 2041 568 116', '.phone');
+  this.addChars_('+44 78 03 25 20 70', '.phone');
   this.addChars_('>space', '.theme-space');
 
   $('.cubes__title span').each(function(index, el) {
