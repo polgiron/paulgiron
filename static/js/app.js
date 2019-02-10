@@ -4,7 +4,7 @@ PG.App = function() {
   }
   else if ($('body').hasClass('cubes')) {
     new PG.Cubes();
-    new PG.CubesText();
+    // new PG.CubesText();
   }
 };
 

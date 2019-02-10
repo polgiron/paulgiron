@@ -40,10 +40,10 @@ PG.Cubes = function() {
   this.cubeWrapper_ = new THREE.Object3D();
   this.cubes_ = [];
   this.delay_ = 30;
-  this.speed_ = 700
+  this.speed_ = 1500
 
   // Links to hover
-  this.links_ = document.querySelectorAll('.email, .phone');
+  // this.links_ = document.querySelectorAll('.email, .phone');
 
   this.addCubes_();
   this.addPivot_();
@@ -55,9 +55,9 @@ PG.Cubes.prototype.addListeners_ = function() {
   window.addEventListener('resize', this.onWindowResize_.bind(this), false);
   // document.addEventListener('mousemove', this.onMouseMove_.bind(this), false);
 
-  this.links_.forEach(function(element) {
-    element.addEventListener('mouseenter', this.onMouseHover_.bind(this), false);
-  }.bind(this));
+  // this.links_.forEach(function(element) {
+  //   element.addEventListener('mouseenter', this.onMouseHover_.bind(this), false);
+  // }.bind(this));
 };
 
 PG.Cubes.prototype.onWindowResize_ = function() {
@@ -66,9 +66,9 @@ PG.Cubes.prototype.onWindowResize_ = function() {
   this.renderer_.setSize(window.innerWidth, window.innerHeight);
 };
 
-PG.Cubes.prototype.onMouseHover_ = function(event) {
+// PG.Cubes.prototype.onMouseHover_ = function(event) {
   // console.log(event.target);
-};
+// };
 
 PG.Cubes.prototype.onMouseMove_ = function(event) {
   var x = event.clientX;
