@@ -10,7 +10,6 @@ export class CubesComponent implements OnInit {
   @ViewChild('wrapper', { static: true }) wrapper: ElementRef;
   email: string;
   phone: string;
-
   scene: any;
   camera: any;
   renderer: any;

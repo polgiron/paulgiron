@@ -6,7 +6,7 @@
   left: 0;
   width: 100%;
   height: 100vh;
-  background: $color-gray-dark;
+  background: $color-darkgray;
 }
 
 canvas {
@@ -20,7 +20,8 @@ $delay: .3s;
 .title-1,
 .title-2,
 .email,
-.phone {
+.phone,
+.theme-list {
   animation: fade-in-3 1.5s $ease-out-quint $delay both;
 }
 
@@ -36,7 +37,7 @@ $delay: .3s;
   animation-delay: $delay + .3s;
 }
 
-.button-wrapper {
+.theme-list {
   animation-delay: $delay + .4s;
 }
 
@@ -69,6 +70,12 @@ $delay: .3s;
 
   a:hover {
     text-decoration: underline;
+  }
+}
+
+.theme-list {
+  .button {
+    border-color: $color-white-2;
   }
 }
 

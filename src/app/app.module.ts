@@ -11,7 +11,7 @@ import { SpaceComponent } from './components/space/space.component';
   declarations: [
     AppComponent,
     CubesComponent,
-    SpaceComponent,
+    SpaceComponent
   ],
   imports: [
     BrowserModule,
