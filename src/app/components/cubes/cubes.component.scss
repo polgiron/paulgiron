@@ -15,7 +15,7 @@ canvas {
   display: block;
 }
 
-$delay: .1s;
+$delay: .3s;
 
 .title-1,
 .title-2,
@@ -56,7 +56,7 @@ $delay: .1s;
 }
 
 .title-1 {
-  font-size: 4rem;
+  font-size: 3rem;
   font-weight: 600;
 
   @media (max-width: $screen-xs-max) {

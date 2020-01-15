@@ -5,11 +5,13 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { CubesComponent } from './components/cubes/cubes.component';
 import { InfosService } from './services/infos.service';
+import { SpaceComponent } from './components/space/space.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     CubesComponent,
+    SpaceComponent,
   ],
   imports: [
     BrowserModule,

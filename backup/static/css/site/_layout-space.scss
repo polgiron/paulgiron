@@ -1,0 +1,91 @@
+// main: ../main.scss
+
+body {
+  background: #ECECEC;
+  color: $color-gray;
+}
+
+.main-wrapper {
+  height: 100%;
+  padding: 4rem;
+
+  @media (max-width: $screen-sm-max) {
+    padding: 2rem;
+  }
+
+  @media (max-width: $screen-xs-max) {
+    padding: 1rem;
+  }
+}
+
+.space__infos {
+  position: relative;
+  z-index: 9999;
+
+  h1 {
+    font-size: 4.5rem;
+    font-weight: 300;
+    line-height: 1;
+    animation: fade-in-2 .3s ease-out .2s both;
+
+    @media (max-width: $screen-xs-max) {
+      font-size: 17vmin;
+    }
+  }
+
+  h2 {
+    font-size: 2rem;
+    font-weight: 300;
+    margin-top: 1rem;
+    animation: fade-in-2 .3s ease-out .3s both;
+
+    @media (max-width: $screen-xs-max) {
+      font-size: 8vmin;
+    }
+  }
+
+  .contact-list {
+    margin-top: 2rem;
+    line-height: 1.5;
+    animation: fade-in-2 .3s ease-out .4s both;
+
+    @media (max-width: $screen-xs-max) {
+      margin-top: 1rem;
+    }
+
+    a {
+      font-size: 1.2rem;
+      font-weight: 300;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  .theme-list {
+    margin-top: 2rem;
+    animation: fade-in-2 .3s ease-out .5s both;
+
+    @media (max-width: $screen-xs-max) {
+      margin-top: 1rem;
+    }
+
+    a {
+      font-size: 1.2rem;
+      font-weight: 300;
+    }
+  }
+}
+
+@keyframes fade-in-2 {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

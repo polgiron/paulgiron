@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { CubesComponent } from './components/cubes/cubes.component';
+import { SpaceComponent } from './components/space/space.component';
 
 
 const routes: Routes = [
@@ -9,10 +10,10 @@ const routes: Routes = [
     path: 'cubes',
     component: CubesComponent
   },
-  // {
-  //   path: 'space',
-  //   component: HomeComponent
-  // },
+  {
+    path: 'space',
+    component: SpaceComponent
+  },
   { path: '**', redirectTo: '' }
 ];
 

@@ -1,4 +1,4 @@
-<div class="cubes">
+<div class="cubes" #wrapper (window:resize)="onResize()">
   <div class="infos">
     <h1 class="title-1">Paul Giron</h1>
     <div class="bottom">
@@ -8,7 +8,10 @@
         <li class="phone"><a href="tel:{{phone}}">{{phone}}</a></li>
       </ul>
       <!-- <ul class="theme-list">
-      <li class="button-wrapper"><a class="theme-space button" href="/space">space</a></li>
-    </ul> -->
+        <li class="button-wrapper">
+          <a class="theme-space button" [routerLink]="['/space']">space</a>
+        </li>
+      </ul> -->
     </div>
   </div>
+</div>

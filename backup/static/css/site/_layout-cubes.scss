@@ -1,0 +1,87 @@
+// main: ../main.scss
+
+body.cubes {
+  background: $color-gray-dark;
+  // background: linear-gradient(45deg, $color-gray-dark-2 0%, $color-gray-dark 50%);
+
+  canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  $delay: .1s;
+
+  h1,
+  h2,
+  li {
+    animation: fade-in-3 1.5s $ease-out-quint $delay both;
+  }
+
+  h2 {
+    animation-delay: $delay + .1s;
+  }
+
+  .email {
+    animation-delay: $delay + .2s;
+  }
+
+  .phone {
+    animation-delay: $delay + .3s;
+  }
+
+  .button-wrapper {
+    animation-delay: $delay + .4s;
+  }
+}
+
+.cubes__title {
+  position: absolute;
+  left: 65vw;
+  bottom: 4rem;
+  color: $color-white-2;
+
+  @media (max-width: $screen-xs-max) {
+    left: auto;
+    bottom: auto;
+    right: 2rem;
+    top: 2rem;
+  }
+
+  h1 {
+    font-size: 3rem;
+
+    @media (max-width: $screen-xs-max) {
+      font-size: 1.5rem;
+    }
+  }
+
+  span {
+    opacity: 0;
+    transition: opacity 2s ease-out;
+
+    &.is-visible {
+      opacity: 1;
+    }
+  }
+
+  ul {
+    margin-top: 1rem;
+  }
+
+  .contact-list a:hover {
+    text-decoration: underline;
+  }
+}
+
+@keyframes fade-in-3 {
+  from {
+    opacity: 0;
+    transform: translate3d(-2.5rem, 3rem, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}

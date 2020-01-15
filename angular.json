@@ -30,7 +30,11 @@
             "styles": [
               "src/assets/scss/main.scss"
             ],
-            "scripts": []
+            "scripts": [
+              "src/assets/js/Tween.min.js",
+              "src/assets/js/three.min.js",
+              "src/assets/js/OrbitControls.js"
+            ]
           },
           "configurations": {
             "production": {

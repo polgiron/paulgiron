@@ -1,0 +1,45 @@
+.theme-list {
+  a:hover span:first-child {
+    display: inline-block;
+    animation: theme-anim .4s ease-out both;
+  }
+
+  span:first-child {
+    margin-right: .2em;
+    position: relative;
+    top: .05em;
+  }
+}
+
+.bottom {
+  opacity: .6;
+}
+
+.button {
+  display: inline-block;
+  padding: .6rem 1rem;
+  background: white;
+  color: #333;
+  border-radius: 1000rem;
+  margin-top: .8rem;
+
+  &:hover {
+    opacity: .9;
+  }
+}
+
+.button--dark {
+  background: #333;
+  color: white;
+}
+
+@keyframes theme-anim {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(-80%, 0, 0);
+  }
+}
