@@ -1,16 +1,3 @@
-// .theme-list {
-//   a:hover span:first-child {
-//     display: inline-block;
-//     animation: theme-anim .4s ease-out both;
-//   }
-
-//   span:first-child {
-//     margin-right: .2em;
-//     position: relative;
-//     top: .05em;
-//   }
-// }
-
 .infos {
   color: $color-darkgray;
 }
@@ -23,30 +10,40 @@
   margin-top: 1.5rem;
 }
 
-.button {
-  padding: .5rem 1rem;
-  border-radius: 1000rem;
-  border: 1px solid $color-darkgray;
-  // font-size: .85rem;
+.title-1 {
+  font-size: 3rem;
   font-weight: 600;
+  line-height: 1;
+  margin-bottom: .25rem;
+}
 
-  &:hover {
-    opacity: .8;
+.title-2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.contact-list {
+  margin-top: 1rem;
+  line-height: 1.5;
+  font-size: 1.2rem;
+
+  a:hover {
+    text-decoration: underline;
   }
 }
 
-// .button--dark {
-//   background: #333;
-//   color: white;
-// }
+.button {
+  padding: .55rem 1rem;
+  border-radius: 1000rem;
+  // border: 1px solid $color-darkgray;
+  background: $color-darkgray;
+  color: $color-space-background;
+  // font-size: .85rem;
+  font-weight: 600;
+  transition: all .2s;
 
-// @keyframes theme-anim {
-//   0%,
-//   100% {
-//     transform: translate3d(0, 0, 0);
-//   }
-
-//   50% {
-//     transform: translate3d(-80%, 0, 0);
-//   }
-// }
+  &:hover {
+    opacity: .8;
+    color: $color-space-background;
+  }
+}

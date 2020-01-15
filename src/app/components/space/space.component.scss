@@ -19,10 +19,6 @@
 $infos-animation-delay: .8s;
 
 .title-1 {
-  font-size: 3rem;
-  font-weight: 600;
-  line-height: 1;
-  margin-bottom: .25rem;
   animation: infos-fade .5s ease-out both $infos-animation-delay + .2s;
   transform-origin: right bottom;
 
@@ -32,8 +28,6 @@ $infos-animation-delay: .8s;
 }
 
 .title-2 {
-  font-size: 1.5rem;
-  font-weight: 500;
   animation: infos-fade .5s ease-out both $infos-animation-delay + .1s;
   transform-origin: right bottom;
 
@@ -43,19 +37,8 @@ $infos-animation-delay: .8s;
 }
 
 .contact-list {
-  margin-top: 1rem;
-  line-height: 1.5;
   animation: infos-fade .5s ease-out both $infos-animation-delay;
   transform-origin: right bottom;
-
-  a {
-    font-size: 1.2rem;
-    font-weight: 300;
-
-    &:hover {
-      text-decoration: underline;
-    }
-  }
 }
 
 .theme-list {
