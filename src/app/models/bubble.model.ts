@@ -1,28 +1,34 @@
 export class Bubble {
-  // private size: number = 20;
-  // private size: number = this.getRandomInt(40, 60);
-  private size: number = 100;
-  // private x: number = this.getRandomInt(0, this.ctx.canvas.width);
-  // private y: number = this.getRandomInt(0, this.ctx.canvas.height);
-  private x: number = this.getRandomInt(this.ctx.canvas.width / 2 - 400, this.ctx.canvas.width / 2 + 400);
-  private y: number = this.getRandomInt(this.ctx.canvas.height / 2 - 100, this.ctx.canvas.height / 2 + 100);
-  // private x: number = this.ctx.canvas.width / 2 - this.size / 2;
-  // private y: number = this.ctx.canvas.height / 2 - this.size / 2;
-  private speed: number = 10;
+  private size: number = 20 * devicePixelRatio;
+  private speed: number = 5;
   private angle: number = this.getRandomInt(0, 360) * Math.PI / 180;
-  // private angle: number = 0;
-  private angleDelta: number = 5;
-  // private angleDelta: number = 0;
+  private angleDelta: number = 0;
+  private maxSize: number = this.ctx.canvas.height * .5;
 
   constructor(
     private ctx: CanvasRenderingContext2D,
-    private color: string = 'black'
+    private color: string = 'black',
+    private x?: number,
+    private y?: number
   ) {
+    if (!x) {
+      this.x = this.getRandomInt(this.ctx.canvas.width / 2 - 200 * devicePixelRatio, this.ctx.canvas.width / 2 + 200 * devicePixelRatio);
+      // private y: number = this.getRandomInt(this.ctx.canvas.height / 2 - 100 * devicePixelRatio, this.ctx.canvas.height / 2 + 100 * devicePixelRatio);
+    }
+    if (!y) {
+      this.y = this.ctx.canvas.height / 2;
+    }
+
+    if (color == 'black') {
+      // this.x = this.getRandomInt(this.ctx.canvas.width / 2 - 300 * devicePixelRatio, this.ctx.canvas.width / 2 + 300 * devicePixelRatio);
+      this.y = this.getRandomInt(this.ctx.canvas.height / 2 - 100 * devicePixelRatio, this.ctx.canvas.height / 2 + 100 * devicePixelRatio);
+      this.speed = 1;
+    }
+
     this.draw();
   }
 
   private draw(): void {
-    // this.ctx.fillRect(this.x, this.y, 20, 20);
     this.ctx.beginPath();
     this.ctx.arc(this.x, this.y, this.size / 2, 0, 2 * Math.PI);
     this.ctx.fillStyle = this.color;
@@ -34,16 +40,19 @@ export class Bubble {
     // const newAngle: number = this.getRandomInt(0, this.angleDelta) * (Math.PI / 180) * plusOrMinus;
     const newAngle: number = this.getRandomInt(0, this.angleDelta) * (Math.PI / 180);
     this.angle += newAngle;
-    const x: number = Math.cos(this.angle) * this.speed;
-    const y: number = Math.sin(this.angle) * this.speed;
-    // console.log(Math.round(this.angle % 360));
+    const x: number = Math.cos(this.angle) * this.speed * devicePixelRatio;
+    const y: number = Math.sin(this.angle) * this.speed * devicePixelRatio;
 
-    if (this.size < this.ctx.canvas.height * .65) {
-      this.size += 5;
+    if (this.size < this.maxSize) {
+      this.size += 5 * devicePixelRatio;
     }
 
     if (this.speed > 1) {
-      this.speed -= this.speed * 1 / 100;
+      this.speed -= this.speed * .8 * devicePixelRatio / 100;
+    }
+
+    if (this.angleDelta < 5) {
+      this.angleDelta += .5;
     }
 
     this.move(x, y);

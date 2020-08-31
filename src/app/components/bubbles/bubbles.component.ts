@@ -17,7 +17,6 @@ export class BubblesComponent implements OnInit {
   canvasWidth: number = window.innerWidth;
   canvasHeight: number = window.innerHeight;
   playing: boolean = false;
-  tick: number = 0;
   colors: string[] = [
     '#1abc9c',
     '#2ecc71',
@@ -35,8 +34,8 @@ export class BubblesComponent implements OnInit {
     '#c0392b'
   ];
   interval: any;
-  maxBubbles: number = 22;
-  // devicePixelRatio: number = 1;
+  // maxBubbles: number = 20;
+  maxBlackBubbles: number = 8;
 
   constructor(
     private infos: InfosService
@@ -58,31 +57,60 @@ export class BubblesComponent implements OnInit {
   }
 
   initCanvas(): void {
-    // this.devicePixelRatio = window.devicePixelRatio || 1;
     this.canvas.nativeElement.width = this.canvasWidth * devicePixelRatio;
     this.canvas.nativeElement.height = this.canvasHeight * devicePixelRatio;
     this.ctx = this.canvas.nativeElement.getContext('2d');
     this.ctx.globalAlpha = .8;
-    console.log(this.ctx.canvas.height / devicePixelRatio);
   }
 
   start(): void {
     // this.colors.forEach(color => {
     //   this.bubbles.push(new Bubble(this.ctx, color));
     // });
-    let index: number = 0;
+    // let index: number = 0;
+    // this.interval = setInterval(() => {
+    //   this.bubbles.push(new Bubble(this.ctx, this.colors[index]));
+    //   index++;
+    //   if (index >= this.maxBubbles) {
+    //     clearInterval(this.interval);
+    //   }
+    // }, 50);
+
+
+    const distance1: number = 1000;
+    const step1: number = distance1 / this.colors.length;
+    const left1 = (this.ctx.canvas.width - distance1) / 2;
+
+    const distance2: number = 1200;
+    const step2: number = distance2 / this.maxBlackBubbles;
+    const left2 = (this.ctx.canvas.width - distance2) / 2;
+
+    let index1: number = 0;
+    let index2: number = 0;
+
     this.interval = setInterval(() => {
-      this.bubbles.push(new Bubble(this.ctx, this.colors[index]));
-      // this.bubbles.push(new Bubble(this.ctx));
-      index++;
-      if (index >= this.maxBubbles) {
-        clearInterval(this.interval);
+      console.log('tick');
+      if (this.colors[index1]) {
+        this.bubbles.push(new Bubble(this.ctx, this.colors[index1], left1 + index1 * step1));
+        index1++;
+      } else {
+        this.bubbles.push(new Bubble(this.ctx, 'black', left2 + index2 * step2));
+        index2++;
+
+        if (index2 == this.maxBlackBubbles) {
+          clearInterval(this.interval);
+        }
       }
+      // if (index >= this.maxBlackBubbles) {
+      //   clearInterval(this.interval);
+      // }
     }, 50);
+
     requestAnimationFrame(this.animate.bind(this));
   }
 
   stop(): void {
+    clearInterval(this.interval);
     this.bubbles = [];
     cancelAnimationFrame(this.animationFrameId);
     this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
@@ -90,19 +118,10 @@ export class BubblesComponent implements OnInit {
 
   animate(): void {
     this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
-    this.tick++;
     this.bubbles.forEach(mob => {
       mob.moveRandom();
     });
-
-    // if (this.ctx.globalAlpha < 0.6) {
-    //   this.ctx.globalAlpha += .01;
-    // }
-
     this.animationFrameId = requestAnimationFrame(this.animate.bind(this));
-    // if (this.tick == 500) {
-    //   this.pause();
-    // }
   }
 
   // getEase(currentProgress: number, start: number, distance: number, steps: number): number {
