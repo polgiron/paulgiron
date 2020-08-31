@@ -1,17 +1,17 @@
 export class Bubble {
   // private size: number = 20;
   // private size: number = this.getRandomInt(40, 60);
-  private size: number = 300;
+  private size: number = 100;
   // private x: number = this.getRandomInt(0, this.ctx.canvas.width);
   // private y: number = this.getRandomInt(0, this.ctx.canvas.height);
   private x: number = this.getRandomInt(this.ctx.canvas.width / 2 - 400, this.ctx.canvas.width / 2 + 400);
-  private y: number = this.getRandomInt(this.ctx.canvas.height / 2 - 20, this.ctx.canvas.height / 2 + 20);
+  private y: number = this.getRandomInt(this.ctx.canvas.height / 2 - 100, this.ctx.canvas.height / 2 + 100);
   // private x: number = this.ctx.canvas.width / 2 - this.size / 2;
   // private y: number = this.ctx.canvas.height / 2 - this.size / 2;
   private speed: number = 10;
   private angle: number = this.getRandomInt(0, 360) * Math.PI / 180;
-  // private angleDelta: number = 10;
   // private angle: number = 0;
+  // private angleDelta: number = 1;
   private angleDelta: number = 0;
 
   constructor(
@@ -31,18 +31,18 @@ export class Bubble {
 
   moveRandom(): void {
     const plusOrMinus: number = Math.random() < .5 ? -1 : 1;
-    const newAngle: number = this.getRandomInt(0, this.angleDelta) * (Math.PI / 180) * plusOrMinus;
-    // const newAngle: number = this.getRandomInt(0, this.angleDelta) * (Math.PI / 180);
+    // const newAngle: number = this.getRandomInt(0, this.angleDelta) * (Math.PI / 180) * plusOrMinus;
+    const newAngle: number = this.getRandomInt(0, this.angleDelta) * (Math.PI / 180);
     this.angle += newAngle;
     const x: number = Math.cos(this.angle) * this.speed;
     const y: number = Math.sin(this.angle) * this.speed;
     // console.log(Math.round(this.angle % 360));
 
-    if (this.size < window.innerHeight * 1.5) {
+    if (this.size < window.innerHeight * .5) {
       this.size += 5;
     }
 
-    if (this.speed > 4) {
+    if (this.speed > 2) {
       this.speed -= .05;
     }
 
