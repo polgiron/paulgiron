@@ -11,8 +11,8 @@ export class Bubble {
   private speed: number = 10;
   private angle: number = this.getRandomInt(0, 360) * Math.PI / 180;
   // private angle: number = 0;
-  // private angleDelta: number = 1;
-  private angleDelta: number = 0;
+  private angleDelta: number = 5;
+  // private angleDelta: number = 0;
 
   constructor(
     private ctx: CanvasRenderingContext2D,
@@ -42,8 +42,8 @@ export class Bubble {
       this.size += 5;
     }
 
-    if (this.speed > 2) {
-      this.speed -= .05;
+    if (this.speed > 1) {
+      this.speed -= this.speed * 1 / 100;
     }
 
     this.move(x, y);
@@ -77,19 +77,4 @@ export class Bubble {
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
-
-  // isTouching(mobX: number, mobY: number) {
-  //   const a: number = this.size / 2;
-  //   const b: number = this.size / 2;
-  //   const c: number = Math.sqrt((this.x - mobY) * (this.x - mobY) + (this.y - mobY) * (this.y - mobY));
-  //   const d: number = (b * b + c * c - a * a) / (2 * c);
-  //   const h: number = Math.sqrt(b * b - d * d);
-  //   // console.log(a, b, c, d, h);
-  //   const x3: number = (mobX - this.x) * d / c + (mobY - this.y) * h / c + this.x;
-  //   const y3: number = (mobY - this.y) * d / c - (mobX - this.x) * h / c + this.y;
-  //   const x4: number = (mobX - this.x) * d / c - (mobY - this.y) * h / c + this.x;
-  //   const y4: number = (mobY - this.y) * d / c + (mobX - this.x) * h / c + this.y;
-  //   console.log('x3: ' + x3);
-  //   console.log('x4: ' + x4);
-  // }
 }

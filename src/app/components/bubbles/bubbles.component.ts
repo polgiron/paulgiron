@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { InfosService } from 'src/app/services/infos.service';
 import { Bubble } from 'src/app/models/bubble.model';
 
@@ -13,7 +13,7 @@ export class BubblesComponent implements OnInit {
   phone: string = this.infos.phone;
   ctx: CanvasRenderingContext2D;
   animationFrameId: any;
-  mobs: Bubble[] = [];
+  bubbles: Bubble[] = [];
   canvasWidth: number = window.innerWidth;
   canvasHeight: number = window.innerHeight;
   playing: boolean = false;
@@ -34,10 +34,19 @@ export class BubblesComponent implements OnInit {
     '#d35400',
     '#c0392b'
   ];
+  interval: any;
+  maxBubbles: number = 22;
+  // devicePixelRatio: number = 1;
 
   constructor(
     private infos: InfosService
   ) { }
+
+  @HostListener('window:resize') onScroll(): void {
+    this.initCanvas();
+    this.stop();
+    this.start();
+  };
 
   ngOnInit(): void {
     this.initCanvas();
@@ -49,40 +58,40 @@ export class BubblesComponent implements OnInit {
   }
 
   initCanvas(): void {
-    const devicePixelRatio: number = window.devicePixelRatio || 1;
+    // this.devicePixelRatio = window.devicePixelRatio || 1;
     this.canvas.nativeElement.width = this.canvasWidth * devicePixelRatio;
     this.canvas.nativeElement.height = this.canvasHeight * devicePixelRatio;
     this.ctx = this.canvas.nativeElement.getContext('2d');
-    this.ctx.globalAlpha = .7;
-    // this.ctx.globalAlpha = .02;
+    this.ctx.globalAlpha = .8;
+    console.log(this.ctx.canvas.height / devicePixelRatio);
   }
 
   start(): void {
-    this.colors.forEach(color => {
-      this.mobs.push(new Bubble(this.ctx, color));
-    });
-    this.resume();
-  }
-
-  pause(): void {
-    cancelAnimationFrame(this.animationFrameId);
-    this.playing = false;
-  }
-
-  resume(): void {
+    // this.colors.forEach(color => {
+    //   this.bubbles.push(new Bubble(this.ctx, color));
+    // });
+    let index: number = 0;
+    this.interval = setInterval(() => {
+      this.bubbles.push(new Bubble(this.ctx, this.colors[index]));
+      // this.bubbles.push(new Bubble(this.ctx));
+      index++;
+      if (index >= this.maxBubbles) {
+        clearInterval(this.interval);
+      }
+    }, 50);
     requestAnimationFrame(this.animate.bind(this));
-    this.playing = true;
   }
 
   stop(): void {
-    this.pause();
+    this.bubbles = [];
+    cancelAnimationFrame(this.animationFrameId);
     this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
   }
 
   animate(): void {
     this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
     this.tick++;
-    this.mobs.forEach(mob => {
+    this.bubbles.forEach(mob => {
       mob.moveRandom();
     });
 
@@ -94,14 +103,6 @@ export class BubblesComponent implements OnInit {
     // if (this.tick == 500) {
     //   this.pause();
     // }
-  }
-
-  onClickPlay(): void {
-    if (this.playing) {
-      this.pause();
-    } else {
-      this.resume();
-    }
   }
 
   // getEase(currentProgress: number, start: number, distance: number, steps: number): number {
