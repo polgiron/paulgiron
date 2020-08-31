@@ -1,49 +1,43 @@
-.infos {
-  color: $color-darkgray;
+// .infos {
+//   color: $color-darkgray;
+// }
+
+// .bottom {
+//   opacity: .6;
+// }
+
+.title-1,
+.title-2 {
+  line-height: 1;
+  font-weight: 500;
 }
 
-.bottom {
-  opacity: .6;
+.infos a:hover {
+  text-decoration: underline;
 }
 
 .theme-list {
   margin-top: 1.5rem;
-}
+  display: flex;
+  align-items: center;
 
-.title-1 {
-  font-size: 3rem;
-  font-weight: 600;
-  line-height: 1;
-  margin-bottom: .25rem;
-}
-
-.title-2 {
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-
-.contact-list {
-  margin-top: 1rem;
-  line-height: 1.5;
-  font-size: 1.2rem;
-
-  a:hover {
-    text-decoration: underline;
+  li:not(:last-child) {
+    margin-right: 1rem;
   }
-}
 
-.button {
-  padding: .55rem 1rem;
-  border-radius: 1000rem;
-  // border: 1px solid $color-darkgray;
-  background: $color-darkgray;
-  color: $color-space-background;
-  // font-size: .85rem;
-  font-weight: 600;
-  transition: all .2s;
+  .button {
+    color: rgba($color-black, .8);
+    border: 2px solid rgba($color-black, .8);
+    display: block;
+    background: transparent;
+    text-transform: uppercase;
+    font-weight: 600;
+    padding: .55rem 1rem;
+    border-radius: 1000rem;
+    transition: all .2s;
 
-  &:hover {
-    opacity: .8;
-    color: $color-space-background;
+    &:hover {
+      opacity: .8;
+    }
   }
 }

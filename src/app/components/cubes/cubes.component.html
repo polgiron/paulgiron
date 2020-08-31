@@ -1,14 +1,15 @@
 <main class="cubes" #wrapper (window:resize)="onResize()">
-  <div class="infos">
+  <div class="text">
     <h1 class="title-1">Paul Giron</h1>
     <div class="bottom">
-      <h2 class="title-2">Web developer</h2>
-      <ul class="contact-list">
+      <h2 class="title-2">Web Craft-work</h2>
+      <ul class="infos">
         <li class="email"><a href="mailto:{{email}}">{{email}}</a></li>
         <li class="phone"><a href="tel:{{phone}}">{{phone}}</a></li>
       </ul>
       <ul class="theme-list">
         <li><a class="button" [routerLink]="['/space']">Space</a></li>
+        <li><a class="button" [routerLink]="['/bubbles']">Bubbles</a></li>
       </ul>
     </div>
   </div>

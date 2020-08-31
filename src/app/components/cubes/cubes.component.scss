@@ -41,7 +41,7 @@ $delay: .3s;
   animation-delay: $delay + .4s;
 }
 
-.infos {
+.text {
   position: absolute;
   left: 65vw;
   bottom: 4rem;
@@ -55,14 +55,26 @@ $delay: .3s;
   }
 }
 
-.theme-list .button {
-  background: $color-white-2;
-  color: $color-darkgray;
-  // border-color: $color-white-2;
+.bottom {
+  opacity: .7;
+}
 
-  &:hover {
-    color: $color-darkgray;
-  }
+.title-1 {
+  font-size: 4rem;
+}
+
+.title-2 {
+  font-size: 2rem;
+}
+
+.theme-list .button {
+  color: $color-white-2;
+  border-color: $color-white-2;
+}
+
+.infos {
+  margin-top: 1rem;
+  font-size: 1.5rem;
 }
 
 @keyframes fade-in-3 {
