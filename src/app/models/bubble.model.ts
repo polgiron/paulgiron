@@ -30,7 +30,7 @@ export class Bubble {
   }
 
   moveRandom(): void {
-    const plusOrMinus: number = Math.random() < .5 ? -1 : 1;
+    // const plusOrMinus: number = Math.random() < .5 ? -1 : 1;
     // const newAngle: number = this.getRandomInt(0, this.angleDelta) * (Math.PI / 180) * plusOrMinus;
     const newAngle: number = this.getRandomInt(0, this.angleDelta) * (Math.PI / 180);
     this.angle += newAngle;
@@ -38,7 +38,7 @@ export class Bubble {
     const y: number = Math.sin(this.angle) * this.speed;
     // console.log(Math.round(this.angle % 360));
 
-    if (this.size < window.innerHeight * .5) {
+    if (this.size < this.ctx.canvas.height * .65) {
       this.size += 5;
     }
 
