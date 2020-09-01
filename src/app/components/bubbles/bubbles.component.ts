@@ -77,11 +77,11 @@ export class BubblesComponent implements OnInit {
     // }, 50);
 
 
-    const distance1: number = 1000;
+    const distance1: number = 500 * devicePixelRatio;
     const step1: number = distance1 / this.colors.length;
     const left1 = (this.ctx.canvas.width - distance1) / 2;
 
-    const distance2: number = 1200;
+    const distance2: number = 600 * devicePixelRatio;
     const step2: number = distance2 / this.maxBlackBubbles;
     const left2 = (this.ctx.canvas.width - distance2) / 2;
 
