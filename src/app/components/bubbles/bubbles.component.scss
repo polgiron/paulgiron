@@ -7,6 +7,7 @@
   height: 100vh;
   width: 100%;
   background: $color-white-smoke;
+  box-shadow: inset 0 0 150px 0 rgba($color-black, .2);
 }
 
 .canvas {
@@ -17,13 +18,17 @@
   top: 0;
   left: 0;
   z-index: 0;
-  animation: fade-in 3s both;
+  transition: all 2s $ease-out-quint;
+
+  &.animate {
+    transform: translate3d(0, -100%, 0);
+  }
 }
 
 .text {
   color: $color-white-smoke;
   text-align: center;
-  animation: fade-in 1s both 2s;
+  animation: text-fade-in 1s both 2.1s;
   position: relative;
   z-index: 2;
 }
@@ -51,7 +56,7 @@
   }
 }
 
-@keyframes fade-in {
+@keyframes text-fade-in {
   from {
     opacity: 0;
     // transform: scale(.95);
@@ -72,3 +77,33 @@
     border-color: $color-white-smoke;
   }
 }
+
+.button-scroll {
+  width: 3.2rem;
+  height: 3.2rem;
+  margin-top: 1rem;
+  animation: scroll-button-fade-in .6s both 2.6s;
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+@keyframes scroll-button-fade-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, .85rem, 0);
+  }
+
+  to {
+    opacity: .8;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+// .test {
+//   width: 600px;
+//   height: 30px;
+//   background: lightgray;
+// }

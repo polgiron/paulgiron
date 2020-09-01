@@ -13,14 +13,13 @@ export class Bubble {
   ) {
     if (!x) {
       this.x = this.getRandomInt(this.ctx.canvas.width / 2 - 200 * devicePixelRatio, this.ctx.canvas.width / 2 + 200 * devicePixelRatio);
-      // private y: number = this.getRandomInt(this.ctx.canvas.height / 2 - 100 * devicePixelRatio, this.ctx.canvas.height / 2 + 100 * devicePixelRatio);
     }
     if (!y) {
       this.y = this.ctx.canvas.height / 2;
+      // this.y = this.getRandomInt(this.ctx.canvas.height / 2 - 50 * devicePixelRatio, this.ctx.canvas.height / 2 + 50 * devicePixelRatio);
     }
 
     if (color == 'black') {
-      // this.x = this.getRandomInt(this.ctx.canvas.width / 2 - 300 * devicePixelRatio, this.ctx.canvas.width / 2 + 300 * devicePixelRatio);
       this.y = this.getRandomInt(this.ctx.canvas.height / 2 - 100 * devicePixelRatio, this.ctx.canvas.height / 2 + 100 * devicePixelRatio);
       this.speed = 1;
     }
@@ -28,7 +27,7 @@ export class Bubble {
     this.draw();
   }
 
-  private draw(): void {
+  draw(): void {
     this.ctx.beginPath();
     this.ctx.arc(this.x, this.y, this.size / 2, 0, 2 * Math.PI);
     this.ctx.fillStyle = this.color;
@@ -85,5 +84,43 @@ export class Bubble {
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  animateCurve(x0: number, y0: number, x1: number, y1: number, x2: number, y2: number, t0: number, t1: number): void {
+    this.ctx.beginPath();
+
+    if (0.0 == t0 && t1 == 1.0) {
+      this.ctx.moveTo(x0, y0);
+      this.ctx.quadraticCurveTo(x1, y1, x2, y2);
+    } else if (t0 != t1) {
+      var t00 = t0 * t0,
+        t01 = 1.0 - t0,
+        t02 = t01 * t01,
+        t03 = 2.0 * t0 * t01;
+
+      var nx0 = t02 * x0 + t03 * x1 + t00 * x2,
+        ny0 = t02 * y0 + t03 * y1 + t00 * y2;
+
+      t00 = t1 * t1;
+      t01 = 1.0 - t1;
+      t02 = t01 * t01;
+      t03 = 2.0 * t1 * t01;
+
+      var nx2 = t02 * x0 + t03 * x1 + t00 * x2,
+        ny2 = t02 * y0 + t03 * y1 + t00 * y2;
+
+      var nx1 = this.lerp(this.lerp(x0, x1, t0), this.lerp(x1, x2, t0), t1),
+        ny1 = this.lerp(this.lerp(y0, y1, t0), this.lerp(y1, y2, t0), t1);
+
+      this.ctx.moveTo(nx0, ny0);
+      this.ctx.quadraticCurveTo(nx1, ny1, nx2, ny2);
+    }
+
+    this.ctx.stroke();
+    this.ctx.closePath();
+  }
+
+  lerp(v0: number, v1: number, t: number): number {
+    return (1.0 - t) * v0 + t * v1;
   }
 }

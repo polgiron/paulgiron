@@ -31,11 +31,28 @@ export class BubblesComponent implements OnInit {
     '#e74c3c',
     '#f39c12',
     '#d35400',
-    '#c0392b'
+    '#c0392b',
+
+    // '#1abc9c',
+    // '#2ecc71',
+    // '#3498db',
+    // '#9b59b6',
+    // '#16a085',
+    // '#27ae60',
+    // '#2980b9',
+    // '#8e44ad',
+    // '#f1c40f',
+    // '#e67e22',
+    // '#e74c3c',
+    // '#f39c12',
+    // '#d35400',
+    // '#c0392b'
   ];
-  interval: any;
+  intervalColors: any;
+  intervalBlacks: any;
   // maxBubbles: number = 20;
   maxBlackBubbles: number = 8;
+  animateCanvas: boolean;
 
   constructor(
     private infos: InfosService
@@ -64,53 +81,57 @@ export class BubblesComponent implements OnInit {
   }
 
   start(): void {
-    // this.colors.forEach(color => {
-    //   this.bubbles.push(new Bubble(this.ctx, color));
-    // });
-    // let index: number = 0;
-    // this.interval = setInterval(() => {
-    //   this.bubbles.push(new Bubble(this.ctx, this.colors[index]));
-    //   index++;
-    //   if (index >= this.maxBubbles) {
-    //     clearInterval(this.interval);
-    //   }
-    // }, 50);
-
-
-    const distance1: number = 500 * devicePixelRatio;
-    const step1: number = distance1 / this.colors.length;
-    const left1 = (this.ctx.canvas.width - distance1) / 2;
-
-    const distance2: number = 600 * devicePixelRatio;
-    const step2: number = distance2 / this.maxBlackBubbles;
-    const left2 = (this.ctx.canvas.width - distance2) / 2;
-
-    let index1: number = 0;
-    let index2: number = 0;
-
-    this.interval = setInterval(() => {
-      console.log('tick');
-      if (this.colors[index1]) {
-        this.bubbles.push(new Bubble(this.ctx, this.colors[index1], left1 + index1 * step1));
-        index1++;
-      } else {
-        this.bubbles.push(new Bubble(this.ctx, 'black', left2 + index2 * step2));
-        index2++;
-
-        if (index2 == this.maxBlackBubbles) {
-          clearInterval(this.interval);
-        }
-      }
-      // if (index >= this.maxBlackBubbles) {
-      //   clearInterval(this.interval);
-      // }
-    }, 50);
-
+    this.startPoppingColors();
     requestAnimationFrame(this.animate.bind(this));
   }
 
+  startPoppingColors(): void {
+    const distance: number = 500 * devicePixelRatio;
+    const step: number = distance / (this.colors.length - 1);
+    const left = (this.ctx.canvas.width - distance) / 2;
+    let index: number = 0;
+
+    let points: number[] = [];
+    for (let i = 0; i < this.colors.length; i++) {
+      points.push(left + i * step);
+    }
+
+    this.intervalColors = setInterval(() => {
+      if (this.colors[index]) {
+        const position: number = this.getRandomInt(0, points.length - 1);
+        this.bubbles.push(new Bubble(this.ctx, this.colors[index], points[position]));
+        points.splice(position, 1);
+        index++;
+      } else {
+        clearInterval(this.intervalColors);
+        setTimeout(() => {
+          this.startPoppingBlacks();
+        }, 300);
+      }
+    }, 50);
+  }
+
+  startPoppingBlacks(): void {
+    const distance: number = 600 * devicePixelRatio;
+    const step: number = distance / (this.maxBlackBubbles - 1);
+    const left = (this.ctx.canvas.width - distance) / 2;
+    let index: number = 0;
+
+    this.intervalBlacks = setInterval(() => {
+      this.bubbles.push(new Bubble(this.ctx, 'black', left + index * step));
+      index++;
+
+      if (index == this.maxBlackBubbles) {
+        clearInterval(this.intervalBlacks);
+      }
+    }, 50);
+  }
+
   stop(): void {
-    clearInterval(this.interval);
+    clearInterval(this.intervalColors);
+    clearInterval(this.intervalBlacks);
+    this.intervalColors = null;
+    this.intervalBlacks = null;
     this.bubbles = [];
     cancelAnimationFrame(this.animationFrameId);
     this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
@@ -120,8 +141,19 @@ export class BubblesComponent implements OnInit {
     this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
     this.bubbles.forEach(mob => {
       mob.moveRandom();
+      // mob.draw();
     });
     this.animationFrameId = requestAnimationFrame(this.animate.bind(this));
+  }
+
+  onClickScroll(): void {
+    this.animateCanvas = true;
+  }
+
+  getRandomInt(min: number, max: number): number {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
   // getEase(currentProgress: number, start: number, distance: number, steps: number): number {
