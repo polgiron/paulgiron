@@ -3,6 +3,8 @@ import { Routes, RouterModule } from '@angular/router';
 import { CubesComponent } from './components/cubes/cubes.component';
 import { SpaceComponent } from './components/space/space.component';
 import { BubblesComponent } from './components/bubbles/bubbles.component';
+import { TestComponent } from './components/test/test.component';
+import { Bubbles2Component } from './components/bubbles2/bubbles2.component';
 
 const routes: Routes = [
   { path: '', redirectTo: 'bubbles', pathMatch: 'full' },
@@ -17,6 +19,14 @@ const routes: Routes = [
   {
     path: 'bubbles',
     component: BubblesComponent
+  },
+  {
+    path: 'test',
+    component: TestComponent
+  },
+  {
+    path: 'bubbles2',
+    component: Bubbles2Component
   },
   { path: '**', redirectTo: '' }
 ];

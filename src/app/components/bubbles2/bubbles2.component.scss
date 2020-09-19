@@ -1,0 +1,59 @@
+@import '~src/assets/scss/variables';
+
+.canvas {
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  // cursor: none;
+  background: $color-white-smoke;
+  box-shadow: inset 0 0 150px 0 rgba($color-black, .2);
+}
+
+.button-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.button {
+  color: $color-darkgray;
+  background: $color-white;
+  // color: $color-darkgray;
+  border: 1px solid $color-darkgray;
+  // padding: .5rem 1rem;
+  padding: .75rem 1rem;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: .05em;
+  border-radius: 1000rem;
+  transition: .1s all;
+
+  // position: fixed;
+  // top: 400px;
+  // left: 600px;
+
+  &:not(:last-child) {
+    margin-right: 1rem;
+  }
+
+  &:active {
+    transform: scale(.9);
+  }
+}
+
+// @keyframes click {
+//   from {
+//     transform: scale(1);
+//   }
+
+//   to {
+//     transform: scale(.9);
+//   }
+// }
