@@ -6,7 +6,6 @@ import { CubesComponent } from './components/cubes/cubes.component';
 import { InfosService } from './services/infos.service';
 import { SpaceComponent } from './components/space/space.component';
 import { BubblesComponent } from './components/bubbles/bubbles.component';
-import { TestComponent } from './components/test/test.component';
 import { Bubbles2Component } from './components/bubbles2/bubbles2.component';
 
 @NgModule({
@@ -15,7 +14,6 @@ import { Bubbles2Component } from './components/bubbles2/bubbles2.component';
     CubesComponent,
     SpaceComponent,
     BubblesComponent,
-    TestComponent,
     Bubbles2Component
   ],
   imports: [

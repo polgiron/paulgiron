@@ -1,7 +1,9 @@
+import { getRandomInt } from 'src/app/utils/utils';
+
 export class Bubble {
-  private size: number = 20 * devicePixelRatio;
+  private size: number = 22 * devicePixelRatio;
   private speed: number = 5;
-  private angle: number = this.getRandomInt(0, 360) * Math.PI / 180;
+  private angle: number = getRandomInt(0, 360) * Math.PI / 180;
   private angleDelta: number = 0;
   private maxSize: number = this.ctx.canvas.height * .5;
 
@@ -12,7 +14,7 @@ export class Bubble {
     private y?: number
   ) {
     if (!x) {
-      this.x = this.getRandomInt(this.ctx.canvas.width / 2 - 200 * devicePixelRatio, this.ctx.canvas.width / 2 + 200 * devicePixelRatio);
+      this.x = getRandomInt(this.ctx.canvas.width / 2 - 200 * devicePixelRatio, this.ctx.canvas.width / 2 + 200 * devicePixelRatio);
     }
     if (!y) {
       this.y = this.ctx.canvas.height / 2;
@@ -20,8 +22,9 @@ export class Bubble {
     }
 
     if (color == 'black') {
-      this.y = this.getRandomInt(this.ctx.canvas.height / 2 - 100 * devicePixelRatio, this.ctx.canvas.height / 2 + 100 * devicePixelRatio);
+      this.y = getRandomInt(this.ctx.canvas.height / 2 - 100 * devicePixelRatio, this.ctx.canvas.height / 2 + 100 * devicePixelRatio);
       this.speed = 1;
+      // this.size = 40 * devicePixelRatio;
     }
 
     this.draw();
@@ -37,7 +40,7 @@ export class Bubble {
   moveRandom(): void {
     // const plusOrMinus: number = Math.random() < .5 ? -1 : 1;
     // const newAngle: number = this.getRandomInt(0, this.angleDelta) * (Math.PI / 180) * plusOrMinus;
-    const newAngle: number = this.getRandomInt(0, this.angleDelta) * (Math.PI / 180);
+    const newAngle: number = getRandomInt(0, this.angleDelta) * (Math.PI / 180);
     this.angle += newAngle;
     const x: number = Math.cos(this.angle) * this.speed * devicePixelRatio;
     const y: number = Math.sin(this.angle) * this.speed * devicePixelRatio;
@@ -78,12 +81,6 @@ export class Bubble {
     }
 
     this.draw();
-  }
-
-  getRandomInt(min: number, max: number): number {
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
   animateCurve(x0: number, y0: number, x1: number, y1: number, x2: number, y2: number, t0: number, t1: number): void {
