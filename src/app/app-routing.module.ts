@@ -6,7 +6,7 @@ import { BubblesComponent } from './components/bubbles/bubbles.component';
 import { Bubbles2Component } from './components/bubbles2/bubbles2.component';
 
 const routes: Routes = [
-  { path: '', redirectTo: 'bubbles', pathMatch: 'full' },
+  { path: '', redirectTo: 'space', pathMatch: 'full' },
   {
     path: 'cubes',
     component: CubesComponent
