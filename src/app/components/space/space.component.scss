@@ -8,6 +8,7 @@
   height: 100vh;
   background: $color-space-background;
   color: $color-gray;
+  // cursor: none;
 }
 
 .infos {
@@ -18,7 +19,7 @@
   align-items: flex-end;
 }
 
-$animation-delay: .8s;
+$animation-delay: .6s;
 
 .link {
   position: relative;
@@ -111,6 +112,7 @@ $animation-delay: .8s;
 }
 
 @keyframes star-fade {
+
   0%,
   100% {
     opacity: 1;
@@ -122,9 +124,6 @@ $animation-delay: .8s;
     transform: scale(.95);
   }
 }
-
-
-
 
 $main-color: $color-gray;
 $sun-radius: 10vw;

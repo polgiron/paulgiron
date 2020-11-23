@@ -10,6 +10,8 @@ import { getRandomInt } from 'src/app/utils/utils';
 export class SpaceComponent implements OnInit {
   email: string;
   phone: string;
+  stars: Star[] = [];
+  numberOfStars: number = 30;
 
   constructor(
     private infos: InfosService
@@ -18,19 +20,33 @@ export class SpaceComponent implements OnInit {
   ngOnInit(): void {
     this.email = this.infos.email;
     this.phone = this.infos.phone;
-    console.log(getRandomInt(20, 100) / 100);
-  }
-
-  numberOfStars(n: number): any[] {
-    return Array(n);
-  }
-
-  get randomProperties(): {left: string, top: string, width: string, delay: string} {
-    return {
-      left: getRandomInt(0, window.innerWidth / 1.5) + 'px',
-      top: getRandomInt(0, window.innerHeight - 80) + 'px',
-      width: getRandomInt(10, 14) + 'px',
-      delay: getRandomInt(1000, 5000) + 'ms'
+    for (let index = 0; index < this.numberOfStars; index++) {
+      this.stars.push({
+        left: getRandomInt(0, window.innerWidth / 1.5) + 'px',
+        top: getRandomInt(0, window.innerHeight - 80) + 'px',
+        size: getRandomInt(10, 14) + 'px',
+        delay: getRandomInt(1000, 5000) + 'ms'
+      })
     }
   }
+
+  // numberOfStars(n: number): any[] {
+  //   return Array(n);
+  // }
+
+  // get randomProperties(): Star {
+  //   return {
+  //     left: getRandomInt(0, window.innerWidth / 1.5) + 'px',
+  //     top: getRandomInt(0, window.innerHeight - 80) + 'px',
+  //     size: getRandomInt(10, 14) + 'px',
+  //     delay: getRandomInt(1000, 5000) + 'ms'
+  //   }
+  // }
+}
+
+interface Star {
+  left: string;
+  top: string;
+  size: string;
+  delay: string;
 }

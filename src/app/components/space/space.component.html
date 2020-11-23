@@ -50,12 +50,12 @@
   </div>
 
   <div class="stars">
-    <div class="star" *ngFor="let star of numberOfStars(30)"
-      [ngStyle]="{'left': randomProperties.left, 'top': randomProperties.top, 'font-size': randomProperties.width}">
-      <span [ngStyle]="{'animation-delay' : randomProperties.delay}">✷</span>
+    <div class="star" *ngFor="let star of stars"
+      [ngStyle]="{'left': star.left, 'top': star.top, 'font-size': star.size}">
+      <span [ngStyle]="{'animation-delay' : star.delay}">✷</span>
     </div>
   </div>
 
-  <!-- <canvas id="stars" width="500" height="500"></canvas> -->
-  <!-- <div id="overlay"></div> -->
+  <!-- <app-ufo></app-ufo> -->
+  <app-canvas></app-canvas>
 </main>
