@@ -1,17 +1,21 @@
 <main class="space">
-  <div class="text">
-    <h1 class="title-1">Paul Giron</h1>
-    <div class="bottom">
-      <h2 class="title-2">Web Craft-work</h2>
-      <ul class="infos">
-        <li class="email"><a href="mailto:{{email}}">{{email}}</a></li>
-        <li class="phone"><a href="tel:{{phone}}">{{phone}}</a></li>
-      </ul>
-      <ul class="theme-list">
-        <li><a class="button" [routerLink]="['/bubbles']">Bubbles</a></li>
-        <li><a class="button" [routerLink]="['/cubes']">Cubes</a></li>
-      </ul>
+  <div class="infos">
+    <a class="name link" href="mailto:{{email}}">
+      <h1 class="title-1">Paul Giron</h1>
+    </a>
+    <div class="job">
+      <h2 class="title-2">Web Craft-Work</h2>
     </div>
+    <!-- <nav class="nav">
+      <ul>
+        <li>
+          <a class="link" [routerLink]="['/bubbles']">→ Bubbles</a>
+        </li>
+        <li>
+          <a class="link" [routerLink]="['/cubes']">→ Cubes</a>
+        </li>
+      </ul>
+    </nav> -->
   </div>
 
   <div id="sun">
@@ -45,6 +49,13 @@
     </div>
   </div>
 
-  <canvas id="stars" width="500" height="500"></canvas>
-  <div id="overlay"></div>
+  <div class="stars">
+    <div class="star" *ngFor="let star of numberOfStars(30)"
+      [ngStyle]="{'left': randomProperties.left, 'top': randomProperties.top, 'font-size': randomProperties.width}">
+      <span [ngStyle]="{'animation-delay' : randomProperties.delay}">✷</span>
+    </div>
+  </div>
+
+  <!-- <canvas id="stars" width="500" height="500"></canvas> -->
+  <!-- <div id="overlay"></div> -->
 </main>
