@@ -19,7 +19,7 @@
     "@angular/platform-browser": "~9.1.6",
     "@angular/platform-browser-dynamic": "~9.1.6",
     "@angular/router": "~9.1.6",
-    "gsap": "^3.5.1",
+    "gsap": "^3.6.0",
     "rxjs": "~6.5.5",
     "tslib": "^1.11.2",
     "zone.js": "~0.10.3"
