@@ -1,5 +1,4 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { Particle } from './particle.model';
 
 @Component({
   selector: 'app-canvas',

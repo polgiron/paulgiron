@@ -1,0 +1,61 @@
+<main class="space">
+  <div class="infos">
+    <a class="name link" href="mailto:{{email}}">
+      <h1 class="title-1">Paul Giron</h1>
+    </a>
+    <div class="job">
+      <h2 class="title-2">Web Craft-Work</h2>
+    </div>
+    <!-- <nav class="nav">
+      <ul>
+        <li>
+          <a class="link" [routerLink]="['/bubbles']">→ Bubbles</a>
+        </li>
+        <li>
+          <a class="link" [routerLink]="['/cubes']">→ Cubes</a>
+        </li>
+      </ul>
+    </nav> -->
+  </div>
+
+  <div id="sun">
+    <div id="mercury">
+      <div class="planet-wrapper">
+        <div class="planet"></div>
+      </div>
+    </div>
+    <div id="venus">
+      <div class="planet-wrapper">
+        <div class="planet"></div>
+      </div>
+    </div>
+    <div id="earth">
+      <div class="planet-wrapper">
+        <div class="planet"></div>
+        <div id="moon">
+          <div class="moon"></div>
+        </div>
+      </div>
+    </div>
+    <div id="mars">
+      <div class="planet-wrapper">
+        <div class="planet"></div>
+      </div>
+    </div>
+    <div id="neptune">
+      <div class="planet-wrapper">
+        <div class="planet"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stars">
+    <div class="star" *ngFor="let star of stars"
+      [ngStyle]="{'left': star.left, 'top': star.top, 'font-size': star.size}">
+      <span [ngStyle]="{'animation-delay' : star.delay}">✷</span>
+    </div>
+  </div>
+
+  <!-- <app-ufo></app-ufo> -->
+  <app-canvas></app-canvas>
+</main>

@@ -4,6 +4,7 @@ import { CubesComponent } from './components/cubes/cubes.component';
 import { SpaceComponent } from './components/space/space.component';
 import { BubblesComponent } from './components/bubbles/bubbles.component';
 import { Bubbles2Component } from './components/bubbles2/bubbles2.component';
+import { CanvasTestComponent } from './components/canvas-test/canvas-test.component';
 
 const routes: Routes = [
   { path: '', redirectTo: 'space', pathMatch: 'full' },
@@ -22,6 +23,10 @@ const routes: Routes = [
   {
     path: 'bubbles2',
     component: Bubbles2Component
+  },
+  {
+    path: 'test',
+    component: CanvasTestComponent
   },
   { path: '**', redirectTo: '' }
 ];

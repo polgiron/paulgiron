@@ -7,8 +7,9 @@ import { InfosService } from './services/infos.service';
 import { SpaceComponent } from './components/space/space.component';
 import { BubblesComponent } from './components/bubbles/bubbles.component';
 import { Bubbles2Component } from './components/bubbles2/bubbles2.component';
-import { CanvasComponent } from './components/space/canvas/canvas.component';
-import { UfoComponent } from './components/space/ufo/ufo.component';
+import { CanvasComponent } from './components/space-backup/canvas/canvas.component';
+import { UfoComponent } from './components/space-backup/ufo/ufo.component';
+import { CanvasTestComponent } from './components/canvas-test/canvas-test.component';
 
 @NgModule({
   declarations: [
@@ -18,7 +19,8 @@ import { UfoComponent } from './components/space/ufo/ufo.component';
     BubblesComponent,
     Bubbles2Component,
     CanvasComponent,
-    UfoComponent
+    UfoComponent,
+    CanvasTestComponent
   ],
   imports: [
     BrowserModule,
