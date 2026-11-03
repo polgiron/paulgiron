@@ -1,0 +1,10 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "paulgiron",
+  "compatibility_date": "2026-11-03",
+  "assets": {
+    "directory": "./dist",
+    // Old links land on the page rather than on a bare 404.
+    "not_found_handling": "single-page-application"
+  }
+}

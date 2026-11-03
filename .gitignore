@@ -48,3 +48,6 @@ Thumbs.db
 # Design review captures
 /.impeccable/review
 /.impeccable/questions
+
+# wrangler
+/.wrangler
