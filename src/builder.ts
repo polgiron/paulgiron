@@ -1,6 +1,7 @@
 import { Vector3 } from 'three/webgpu';
 import { BRICK } from './bricks';
 import type { Brick, Crew, Spot } from './bricks';
+import type { Effects } from './effects';
 import { heldPosition, setGrip, setPose, solveReach } from './robot';
 import type { Reach, Robot } from './robot';
 
@@ -13,6 +14,10 @@ const BRICK_SECONDS = 2 * SWING_SECONDS + 4 * VERTICAL_SECONDS + 2 * GRIP_SECOND
 // A moment with the finished name, each time it has been built.
 const NAME_HOLD_SECONDS = 6;
 const EMPTY_HOLD_SECONDS = 4;
+// The arm bobs upward as it stops, never down, so the bob can't reach the name.
+const BOB_HEIGHT = 0.16;
+const DASH_MIN_SPEED = 3.5;
+const DASH_SPACING = 0.75;
 
 function ease(t: number) {
   return t * t * t * (t * (t * 6 - 15) + 10);
@@ -28,15 +33,24 @@ function randomItem<T>(items: T[]) {
  * The arm only swings through the half of the circle centred on frontAngle, so it never meets the back wall.
  * A smaller crew waits between bricks, so that both robots finish together with the largest one.
  */
-export function createBuilder(robot: Robot, frontAngle: number, crew: Crew, largestCrew: number) {
+export function createBuilder(robot: Robot, frontAngle: number, crew: Crew, largestCrew: number, effects: Effects) {
   const { slots, bricks } = crew;
   const base = robot.root.position;
   const scratch = new Vector3();
+  const tip = new Vector3();
+  const lastTip = new Vector3();
+  const travel = new Vector3();
+  const across = new Vector3();
+  const dashAt = new Vector3();
+  const towardCamera = new Vector3(0, 0, 1);
   const pause = BRICK_SECONDS * (largestCrew / slots.length - 1);
   const inName = new Map<Vector3, Brick>();
   let freeSpots: Spot[] = [];
   let delta = 0;
   let held: Brick | null = null;
+  let sinceSwing = 99;
+  let sinceDash = 0;
+  let swinging = false;
 
   const reachOf = (point: Vector3, yaw: number, height = point.y): Reach => {
     let angle = Math.atan2(base.z - point.z, point.x - base.x);
@@ -49,7 +63,8 @@ export function createBuilder(robot: Robot, frontAngle: number, crew: Crew, larg
   let at = start;
 
   function pose() {
-    setPose(robot, solveReach(at));
+    const bob = BOB_HEIGHT * Math.exp(-6 * sinceSwing) * ((1 - Math.cos(18 * sinceSwing)) / 2);
+    setPose(robot, solveReach({ ...at, height: at.height + bob }));
     if (held) {
       held.mesh.position.copy(heldPosition(robot, scratch));
       held.mesh.rotation.y = at.yaw;
@@ -58,8 +73,26 @@ export function createBuilder(robot: Robot, frontAngle: number, crew: Crew, larg
   setGrip(robot, 0);
   pose();
 
+  /** Speed lines left behind the claw while it swings fast. */
+  function trail() {
+    if (!swinging) return;
+    heldPosition(robot, tip);
+    travel.subVectors(lastTip, tip);
+    const distance = travel.length();
+    lastTip.copy(tip);
+    if (delta === 0 || distance / delta < DASH_MIN_SPEED) return;
+    travel.divideScalar(distance);
+    sinceDash += distance;
+    if (sinceDash < DASH_SPACING) return;
+    sinceDash = 0;
+    across.crossVectors(travel, towardCamera).normalize();
+    dashAt.copy(tip).addScaledVector(travel, 0.7).addScaledVector(across, (Math.random() < 0.5 ? -1 : 1) * (0.25 + Math.random() * 0.45));
+    effects.dash(dashAt, travel, 0.7 + (distance / delta) * 0.12);
+  }
+
   function* moveTo(target: Reach, seconds: number) {
     const from = at;
+    heldPosition(robot, lastTip);
     for (let time = 0; time < seconds; time += delta) {
       const t = ease(time / seconds);
       at = {
@@ -68,11 +101,20 @@ export function createBuilder(robot: Robot, frontAngle: number, crew: Crew, larg
         height: from.height + (target.height - from.height) * t,
         yaw: from.yaw + (target.yaw - from.yaw) * t,
       };
+      sinceSwing += delta;
       pose();
+      trail();
       yield;
     }
     at = target;
     pose();
+  }
+
+  function* swingTo(target: Reach) {
+    swinging = true;
+    yield* moveTo(target, SWING_SECONDS);
+    swinging = false;
+    sinceSwing = 0;
   }
 
   function* grip(from: number, to: number) {
@@ -84,16 +126,20 @@ export function createBuilder(robot: Robot, frontAngle: number, crew: Crew, larg
   }
 
   function* carry(brick: Brick, from: Vector3, fromYaw: number, to: Vector3, toYaw: number) {
-    yield* moveTo(reachOf(from, fromYaw, TRAVEL_HEIGHT), SWING_SECONDS);
+    yield* swingTo(reachOf(from, fromYaw, TRAVEL_HEIGHT));
     yield* moveTo(reachOf(from, fromYaw), VERTICAL_SECONDS);
     yield* grip(0, 1);
     held = brick;
+    effects.dust(from);
     yield* moveTo(reachOf(from, fromYaw, TRAVEL_HEIGHT), VERTICAL_SECONDS);
-    yield* moveTo(reachOf(to, toYaw, TRAVEL_HEIGHT), SWING_SECONDS);
+    effects.steam(robot.shoulder.getWorldPosition(scratch), Math.sign(base.x));
+    yield* swingTo(reachOf(to, toYaw, TRAVEL_HEIGHT));
     yield* moveTo(reachOf(to, toYaw), VERTICAL_SECONDS);
     held = null;
     brick.mesh.position.copy(to);
     brick.mesh.rotation.y = toYaw;
+    effects.dust(to);
+    effects.settle(brick.mesh);
     yield* grip(1, 0);
     yield* moveTo(reachOf(to, toYaw, TRAVEL_HEIGHT), VERTICAL_SECONDS);
   }
@@ -166,6 +212,8 @@ export function createBuilder(robot: Robot, frontAngle: number, crew: Crew, larg
       freeSpots = [];
       held = null;
       at = start;
+      sinceSwing = 99;
+      swinging = false;
       setGrip(robot, 0);
       pose();
       script = forever(false);

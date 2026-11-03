@@ -1,5 +1,6 @@
 import { AmbientLight, Color, NoToneMapping, PCFShadowMap, PerspectiveCamera, Scene, SpotLight, WebGPURenderer } from 'three/webgpu';
 import { addBricks, ROBOT_X, ROBOT_Z } from './bricks';
+import { createEffects } from './effects';
 import { createInkPipeline } from './ink';
 import { PALETTE } from './palette';
 import { createBuilder } from './builder';
@@ -38,6 +39,7 @@ export async function startScene(canvas: HTMLCanvasElement) {
   addRoom(scene);
   const { left, right } = addBricks(scene);
   const largestCrew = Math.max(left.slots.length, right.slots.length);
+  const effects = createEffects(scene);
 
   const crews = [
     { x: -ROBOT_X, frontAngle: -Math.PI / 2, crew: left },
@@ -47,7 +49,7 @@ export async function startScene(canvas: HTMLCanvasElement) {
     const robot = createRobot();
     robot.root.position.set(x, 0, ROBOT_Z);
     scene.add(robot.root);
-    return createBuilder(robot, frontAngle, crew, largestCrew);
+    return createBuilder(robot, frontAngle, crew, largestCrew, effects);
   });
 
   // Visitors who ask for less motion get the finished name, and can press play themselves.
@@ -93,6 +95,7 @@ export async function startScene(canvas: HTMLCanvasElement) {
     previous = now;
     if (!paused) {
       for (const builder of builders) builder.update(elapsed * speed);
+      effects.update(elapsed * speed);
       needsRender = true;
     }
 
@@ -113,6 +116,7 @@ export async function startScene(canvas: HTMLCanvasElement) {
       speed = value;
     },
     reset() {
+      effects.clear();
       for (const builder of builders) builder.reset();
       needsRender = true;
     },
