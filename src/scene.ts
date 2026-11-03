@@ -5,6 +5,7 @@ import { createInkPipeline } from './ink';
 import { PALETTE } from './palette';
 import { createBuilder } from './builder';
 import { createGrabber } from './grab';
+import { createPinch } from './pinch';
 import { createRobot } from './robot';
 import { addRoom } from './world';
 
@@ -55,7 +56,7 @@ export async function startScene(canvas: HTMLCanvasElement) {
   const builders = workers.map(({ builder }) => builder);
   const grabber = createGrabber(canvas, camera, yard, workers, effects);
 
-  // Visitors who ask for less motion get the finished name, and can press play themselves.
+  // Visitors who ask for less motion get the finished name.
   let paused = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (paused) for (const builder of builders) builder.showFinished();
 
@@ -73,6 +74,10 @@ export async function startScene(canvas: HTMLCanvasElement) {
   // A brick let go of while paused still lands with its dust, on a clock of its own.
   let tidying = false;
 
+  const pinch = createPinch(camera, grabber.letGo, () => {
+    needsRender = true;
+  });
+
   function resize() {
     const { innerWidth: width, innerHeight: height } = window;
     if (width === 0 || height === 0) return;
@@ -84,7 +89,7 @@ export async function startScene(canvas: HTMLCanvasElement) {
     const reach = Math.max(distance, 26);
     camera.position.set(reach * 0.06, 3 + reach * 0.1, reach);
     camera.lookAt(0, 3.6, 0);
-    camera.updateProjectionMatrix();
+    pinch.frame();
 
     renderer.setSize(width, height, false);
     pixelRatio.value = renderer.getPixelRatio();

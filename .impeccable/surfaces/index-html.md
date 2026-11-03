@@ -17,7 +17,7 @@ THESIS: Two industrial arm robots slowly and endlessly build the name PAUL from 
 
 OWN-WORLD: A plain grey monochrome room lit by two crossing spotlights. Flat cel shading, thin ink outlines, crisp shadows. All the colour is in the bricks, sampled from the references: mostly red, mustard and cobalt, with sky, pink, purple, orange and green accents. The robots are white-ish.
 
-FIRST VIEWPORT: The room fills the frame, an empty centre where PAUL will rise, a robot and its loose bricks on each side. Paul Giron and Contact bottom left, playback controls bottom right.
+FIRST VIEWPORT: The room fills the frame, an empty centre where PAUL will rise, a robot and its loose bricks on each side. Paul Giron and Contact bottom left. On a phone, two fingers zoom into the room, leaving the name as it is.
 
 MOTION: The page opens with no name and loose bricks lying around each robot, never in the centre. Each arm picks a random nearby brick and builds its half of PAUL, holds, then takes it apart and drops the bricks in random free spots, for ever. Reduced motion shows the finished name, paused.
 

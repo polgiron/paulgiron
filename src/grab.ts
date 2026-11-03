@@ -220,6 +220,7 @@ export function createGrabber(canvas: HTMLCanvasElement, camera: Camera, yard: Y
     get busy() {
       return drag !== null || fall !== null;
     },
+    letGo,
     update(seconds: number) {
       if (drag) follow(drag, seconds);
       if (fall) drop(fall, seconds);

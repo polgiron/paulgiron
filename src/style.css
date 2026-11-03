@@ -128,11 +128,8 @@ h1 {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 0.25rem;
+  /* Hidden for now. To bring them back, make them visible under .scene-ready. */
   visibility: hidden;
-}
-
-.scene-ready .controls {
-  visibility: visible;
 }
 
 .controls button {
@@ -177,14 +174,23 @@ h1 {
   color: var(--panel);
 }
 
-/* Too narrow for one row: the name and its balloon keep the bottom line, with the controls above them. */
+/* Too narrow for one row: the name takes the whole width, with its balloon above its end and the controls above that. */
 @media (max-width: 640px) {
+  .identity {
+    flex-direction: column-reverse;
+    gap: 0;
+  }
+
   h1 {
-    font-size: min(6.8vw, 1.625rem);
+    font-size: 13vw;
+  }
+
+  .contact {
+    margin-bottom: 1rem;
   }
 
   .controls {
-    bottom: calc(var(--foot) + 6.25rem);
+    bottom: calc(var(--foot) + 7.5rem);
   }
 }
 
