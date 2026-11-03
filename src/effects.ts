@@ -88,14 +88,6 @@ export function createEffects(scene: Scene) {
         addPuff(position.x + x * 0.5, y, position.z + z * 0.5, velocity, between(0.08, 0.17), between(1.2, 1.8));
       }
     },
-    /** A short stream of steam, its puffs growing as they get further out. */
-    steam(position: Vector3, side: number) {
-      for (let i = 0; i < 7; i++) {
-        const speed = 2 + i * 1.3;
-        const velocity = new Vector3(side * speed, speed * between(0.3, 0.55), speed * 0.4);
-        addPuff(position.x, position.y, position.z + 0.5, velocity, 0.16 + i * 0.09, between(2, 2.8));
-      }
-    },
     /** A speed line whose front stays at position and whose tail runs back along direction. */
     dash(position: Vector3, direction: Vector3, length: number) {
       if (dashes.length >= MAX_DASHES) return;
