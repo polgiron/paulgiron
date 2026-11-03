@@ -1,27 +1,18 @@
-# Paulgiron
+# Paul Giron
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 8.1.2.
+Personal site, built with Vite, TypeScript and Three.js.
 
-## Development server
+```bash
+npm install
+npm run dev
+```
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+`npm run build` type-checks and writes the static site to `dist/`.
 
-## Code scaffolding
+## Backups
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+Earlier versions live in `backup/` and are not part of the build:
 
-## Build
-
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
-
-## Running unit tests
-
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
-
-## Running end-to-end tests
-
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
-
-## Further help
-
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+- `backup/angular-2021/`: the Angular 11 site, as it was before this rewrite
+- `backup/ribbon-experiment/`: an abandoned 3D ribbon direction, never shipped
+- `backup/index.html`, `backup/space/`, `backup/static/`: older static versions

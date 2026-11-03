@@ -1,0 +1,195 @@
+@import '@fontsource-variable/bricolage-grotesque/index.css';
+
+:root {
+  --room: #e4e2de;
+  --ink: #2a2a2e;
+  --contact: #e5b54e;
+  --panel: #f7f5f0;
+  --edge: max(1.25rem, env(safe-area-inset-left));
+  --foot: max(1.25rem, env(safe-area-inset-bottom));
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: var(--room);
+  color: var(--ink);
+  font-family: 'Bricolage Grotesque Variable', system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  touch-action: none;
+}
+
+::selection {
+  background: var(--contact);
+  color: var(--ink);
+}
+
+#scene {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  opacity: 0;
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.scene-ready #scene {
+  opacity: 1;
+}
+
+.identity {
+  position: fixed;
+  left: var(--edge);
+  bottom: var(--foot);
+  z-index: 1;
+  display: grid;
+  justify-items: start;
+  gap: 0.75rem;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(1.75rem, 3.4vw, 2.75rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.contact,
+.controls button {
+  border: 2px solid var(--ink);
+  color: var(--ink);
+  font-family: inherit;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background-color 0.15s ease-out, transform 0.1s ease-out;
+}
+
+.contact {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0 1.25em;
+  border-radius: 0.5rem;
+  background: var(--contact);
+  font-size: 1rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.controls {
+  position: fixed;
+  right: max(1.25rem, env(safe-area-inset-right));
+  bottom: var(--foot);
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.375rem;
+  visibility: hidden;
+}
+
+.scene-ready .controls {
+  visibility: visible;
+}
+
+.controls button {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border-radius: 0.5rem;
+  background: var(--panel);
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.controls svg {
+  width: 1rem;
+  height: 1rem;
+  fill: currentColor;
+}
+
+#toggle .icon-play,
+#toggle.is-paused .icon-pause {
+  display: none;
+}
+
+#toggle.is-paused .icon-play {
+  display: block;
+}
+
+.speeds {
+  display: flex;
+}
+
+.speeds button {
+  border-radius: 0;
+}
+
+.speeds button + button {
+  margin-left: -2px;
+}
+
+.speeds button:first-child {
+  border-radius: 0.5rem 0 0 0.5rem;
+}
+
+.speeds button:last-child {
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.speeds button[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--panel);
+}
+
+/* Too narrow for one row next to Contact: speeds drop under play and reset. */
+@media (max-width: 480px) {
+  .controls {
+    width: 10.625rem;
+  }
+}
+
+@media (hover: hover) {
+  .contact:hover {
+    background: #eec566;
+  }
+
+  .controls button:hover:not([aria-pressed='true']) {
+    background: #fff;
+  }
+}
+
+.contact:active,
+.controls button:active {
+  transform: translateY(1px);
+}
+
+.contact:focus-visible,
+.controls button:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #scene,
+  .contact,
+  .controls button {
+    transition: none;
+  }
+}
