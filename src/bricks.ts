@@ -50,6 +50,9 @@ function createBrickFactory() {
 export interface Spot {
   position: Vector3;
   yaw: number;
+  /** The neighbours in a stack: nothing rests on a free spot, and nothing can rest in mid-air. */
+  below?: Spot;
+  above?: Spot;
 }
 
 export interface Brick {
@@ -83,7 +86,7 @@ function rectanglesTouch(
   });
 }
 
-/** Loose bricks around a robot, spaced so its open claw fits around each one without touching the next. */
+/** Loose bricks around a robot, some in stacks, spaced so its open claw fits around each one without touching the next. */
 function scatterSpots(side: number, random: () => number) {
   const spots: Spot[] = [];
   for (let attempt = 0; attempt < 40000 && spots.length < LOOSE_BRICKS; attempt++) {
@@ -93,13 +96,26 @@ function scatterSpots(side: number, random: () => number) {
     if (reach < 3 || reach > 8.6) continue;
     // Stays inside the frame, which narrows towards the camera.
     if (Math.abs(position.x) > 15.4 - Math.max(position.z, 0) * 0.43) continue;
-    const clear = spots.every(
-      (spot) =>
-        !rectanglesTouch(position, yaw, BODY, spot.position, spot.yaw, BODY) &&
-        !rectanglesTouch(position, yaw, CLAW, spot.position, spot.yaw, BODY) &&
-        !rectanglesTouch(position, yaw, BODY, spot.position, spot.yaw, CLAW),
+    const roll = random();
+    const height = Math.min(roll < 0.12 ? 3 : roll < 0.42 ? 2 : 1, LOOSE_BRICKS - spots.length);
+    // Each brick in a stack sits a little askew on the one below.
+    const yaws = Array.from({ length: height }, (_, level) => yaw + (level > 0 ? (random() - 0.5) * 0.5 : 0));
+    const clear = spots.every((spot) =>
+      yaws.every(
+        (turn) =>
+          !rectanglesTouch(position, turn, BODY, spot.position, spot.yaw, BODY) &&
+          !rectanglesTouch(position, turn, CLAW, spot.position, spot.yaw, BODY) &&
+          !rectanglesTouch(position, turn, BODY, spot.position, spot.yaw, CLAW),
+      ),
     );
-    if (clear) spots.push({ position, yaw });
+    if (!clear) continue;
+    let below: Spot | undefined;
+    yaws.forEach((turn, level) => {
+      const spot: Spot = { position: position.clone().setY(BRICK * (level + 0.5)), yaw: turn, below };
+      if (below) below.above = spot;
+      spots.push(spot);
+      below = spot;
+    });
   }
   return spots;
 }

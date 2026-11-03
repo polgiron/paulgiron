@@ -10,7 +10,6 @@ const TRAVEL_HEIGHT = 5.75;
 const SWING_SECONDS = 3.2;
 const VERTICAL_SECONDS = 1.4;
 const GRIP_SECONDS = 0.5;
-const BRICK_SECONDS = 2 * SWING_SECONDS + 4 * VERTICAL_SECONDS + 2 * GRIP_SECONDS;
 // A moment with the finished name, each time it has been built.
 const NAME_HOLD_SECONDS = 6;
 const EMPTY_HOLD_SECONDS = 4;
@@ -31,7 +30,7 @@ function randomItem<T>(items: T[]) {
  * Drives one robot for ever: it builds its part of the name from random loose bricks nearby,
  * then takes it apart again, dropping the bricks in random free spots.
  * The arm only swings through the half of the circle centred on frontAngle, so it never meets the back wall.
- * A smaller crew waits between bricks, so that both robots finish together with the largest one.
+ * A smaller crew moves spare bricks around between its own, so that both robots finish together with the largest one.
  */
 export function createBuilder(robot: Robot, frontAngle: number, crew: Crew, largestCrew: number, effects: Effects) {
   const { slots, bricks } = crew;
@@ -43,7 +42,7 @@ export function createBuilder(robot: Robot, frontAngle: number, crew: Crew, larg
   const across = new Vector3();
   const dashAt = new Vector3();
   const towardCamera = new Vector3(0, 0, 1);
-  const pause = BRICK_SECONDS * (largestCrew / slots.length - 1);
+  const spareMoves = largestCrew - slots.length;
   const inName = new Map<Vector3, Brick>();
   let freeSpots: Spot[] = [];
   let delta = 0;
@@ -143,10 +142,23 @@ export function createBuilder(robot: Robot, frontAngle: number, crew: Crew, larg
     yield* moveTo(reachOf(to, toYaw, TRAVEL_HEIGHT), VERTICAL_SECONDS);
   }
 
+  /** Loose bricks with nothing resting on them. */
+  function pickableBricks() {
+    const taken = new Set(inName.values());
+    return bricks.filter((brick) => {
+      const { above } = brick.spot;
+      return !taken.has(brick) && (!above || freeSpots.includes(above));
+    });
+  }
+
+  /** Free spots on the floor or on top of another brick. */
+  function droppableSpots() {
+    return freeSpots.filter((spot) => !spot.below || !freeSpots.includes(spot.below));
+  }
+
   /** Any loose brick, but not one the same colour as the bricks it will touch, when there is a choice. */
   function chooseBrick(slot: Vector3) {
-    const taken = new Set(inName.values());
-    const loose = bricks.filter((brick) => !taken.has(brick));
+    const loose = pickableBricks();
     const neighbours = new Set(
       [...inName].filter(([other]) => other.distanceTo(slot) < BRICK * 1.1).map(([, brick]) => brick.colorName),
     );
@@ -158,27 +170,45 @@ export function createBuilder(robot: Robot, frontAngle: number, crew: Crew, larg
     for (let time = 0; time < seconds; time += delta) yield;
   }
 
+  /** Moves a loose brick to a free spot, never off the brick the spot rests on. */
+  function* moveSpareBrick() {
+    const spot = randomItem(droppableSpots());
+    const brick = randomItem(pickableBricks().filter((other) => other.spot !== spot.below));
+    const { position, yaw } = brick.spot;
+    yield* carry(brick, position, yaw, spot.position, spot.yaw);
+    freeSpots = freeSpots.filter((other) => other !== spot);
+    freeSpots.push(brick.spot);
+    brick.spot = spot;
+  }
+
+  /** This brick's share of the spare moves, spread evenly along the name. */
+  function* moveSpareBricks(index: number) {
+    const moves = Math.floor(((index + 1) * spareMoves) / slots.length) - Math.floor((index * spareMoves) / slots.length);
+    for (let move = 0; move < moves; move++) yield* moveSpareBrick();
+  }
+
   function* build() {
-    for (const slot of slots) {
+    for (const [index, slot] of slots.entries()) {
       const brick = chooseBrick(slot);
       inName.set(slot, brick);
       const { position, yaw } = brick.spot;
       yield* carry(brick, position, yaw, slot, 0);
       freeSpots.push(brick.spot);
-      yield* wait(pause);
+      yield* moveSpareBricks(index);
     }
   }
 
   function* unbuild() {
-    for (const slot of [...slots].reverse()) {
+    for (const [index, slot] of [...slots].reverse().entries()) {
       const brick = inName.get(slot);
       if (!brick) continue;
-      const spot = randomItem(freeSpots);
+      // First, while a spot is still free for it.
+      yield* moveSpareBricks(index);
+      const spot = randomItem(droppableSpots());
       freeSpots = freeSpots.filter((other) => other !== spot);
       yield* carry(brick, slot, 0, spot.position, spot.yaw);
       brick.spot = spot;
       inName.delete(slot);
-      yield* wait(pause);
     }
   }
 
