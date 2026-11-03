@@ -1,4 +1,4 @@
-import { Color, CylinderGeometry, ExtrudeGeometry, Group, Mesh, MeshToonNodeMaterial, Shape, Vector3 } from 'three/webgpu';
+import { BoxGeometry, Mesh, MeshToonNodeMaterial, Vector3 } from 'three/webgpu';
 import type { Scene } from 'three/webgpu';
 import { PALETTE } from './palette';
 
@@ -22,27 +22,6 @@ const CLAW = [0.2, 1.04] as const;
 export const ROBOT_X = 8;
 export const ROBOT_Z = -3.6;
 
-function brickGeometry() {
-  const size = BRICK - GAP;
-  const chamfer = 0.05;
-  const half = size / 2 - chamfer;
-  const shape = new Shape();
-  shape.moveTo(-half, -half);
-  shape.lineTo(half, -half);
-  shape.lineTo(half, half);
-  shape.lineTo(-half, half);
-  shape.closePath();
-  const geometry = new ExtrudeGeometry(shape, {
-    depth: size - chamfer * 2,
-    bevelEnabled: true,
-    bevelSize: chamfer,
-    bevelThickness: chamfer,
-    bevelSegments: 1,
-  });
-  geometry.translate(0, 0, -(size - chamfer * 2) / 2);
-  return geometry;
-}
-
 /** The same layout on every visit, so the composition stays the one that was checked. */
 function createRandom(seed: number) {
   return () => {
@@ -51,31 +30,16 @@ function createRandom(seed: number) {
   };
 }
 
-/** One toy block: a chamfered cube with a round socket on its face. */
+/** One plain block: a cube of solid colour, with nothing on its faces. */
 function createBrickFactory() {
-  const geometry = brickGeometry();
-  const socket = new CylinderGeometry(BRICK * 0.25, BRICK * 0.25, 0.04, 20);
-  socket.rotateX(Math.PI / 2);
-  const hole = new CylinderGeometry(BRICK * 0.12, BRICK * 0.12, 0.06, 16);
-  hole.rotateX(Math.PI / 2);
+  const size = BRICK - GAP;
+  const geometry = new BoxGeometry(size, size, size);
   const materials = new Map(PALETTE.bricks.map((name) => [name, new MeshToonNodeMaterial({ color: name })]));
-  const holeMaterials = new Map(
-    PALETTE.bricks.map((name) => [name, new MeshToonNodeMaterial({ color: new Color(name).multiplyScalar(0.62) })]),
-  );
 
   return (colorName: string) => {
-    const material = materials.get(colorName);
-    const brick = new Group();
-    const body = new Mesh(geometry, material);
-    body.castShadow = true;
-    body.receiveShadow = true;
-    brick.add(body);
-    const ring = new Mesh(socket, material);
-    ring.position.z = BRICK / 2;
-    brick.add(ring);
-    const center = new Mesh(hole, holeMaterials.get(colorName));
-    center.position.z = BRICK / 2;
-    brick.add(center);
+    const brick = new Mesh(geometry, materials.get(colorName));
+    brick.castShadow = true;
+    brick.receiveShadow = true;
     return brick;
   };
 }
@@ -86,7 +50,7 @@ export interface Spot {
 }
 
 export interface Brick {
-  mesh: Group;
+  mesh: Mesh;
   colorName: string;
   spot: Spot;
   firstSpot: Spot;
