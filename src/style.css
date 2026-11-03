@@ -42,6 +42,8 @@ body {
   height: 100%;
   display: block;
   opacity: 0;
+  -webkit-user-select: none;
+  user-select: none;
   transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 

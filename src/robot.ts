@@ -14,6 +14,7 @@ import {
   Vector3,
 } from 'three/webgpu';
 import { BRICK } from './bricks';
+import type { Box } from './collisions';
 import { PALETTE } from './palette';
 
 export const SHOULDER_HEIGHT = 2.2;
@@ -259,4 +260,32 @@ export function setGrip(robot: Robot, closed: number) {
 export function heldPosition(robot: Robot, target: Vector3) {
   robot.root.updateWorldMatrix(true, true);
   return robot.roll.localToWorld(target.set(0, HOLD, 0));
+}
+
+/** The robot as plain boxes in the world, for what it is now: its base, a row of boxes along each arm, and its claw. */
+export function robotBoxes(robot: Robot): Box[] {
+  robot.root.updateWorldMatrix(true, true);
+  const yaw = robot.turret.rotation.y;
+  const shoulder = robot.shoulder.getWorldPosition(new Vector3());
+  const elbow = robot.elbow.getWorldPosition(new Vector3());
+  const wrist = robot.wrist.getWorldPosition(new Vector3());
+  const limb = (from: Vector3, to: Vector3, half: number) => {
+    const count = Math.ceil(from.distanceTo(to) / half);
+    return Array.from({ length: count }, (_, index) => ({
+      center: from.clone().lerp(to, (index + 0.5) / count),
+      half: new Vector3(half, half, half),
+      yaw,
+    }));
+  };
+  const across = robot.fingers[1].getWorldPosition(new Vector3()).sub(robot.fingers[0].getWorldPosition(new Vector3()));
+  return [
+    { center: robot.root.position.clone().setY(1.5), half: new Vector3(1.5, 1.5, 1.5), yaw },
+    ...limb(shoulder, elbow, 0.6),
+    ...limb(elbow, wrist, 0.42),
+    {
+      center: robot.roll.localToWorld(new Vector3(0, 0.85, 0)),
+      half: new Vector3(0.25, 0.8, 0.95),
+      yaw: Math.atan2(across.x, across.z),
+    },
+  ];
 }

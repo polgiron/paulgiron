@@ -1,9 +1,10 @@
 import { AmbientLight, Color, NoToneMapping, PCFShadowMap, PerspectiveCamera, Scene, SpotLight, WebGPURenderer } from 'three/webgpu';
-import { addBricks, ROBOT_X, ROBOT_Z } from './bricks';
+import { addBricks, resetYard, ROBOT_X, ROBOT_Z } from './bricks';
 import { createEffects } from './effects';
 import { createInkPipeline } from './ink';
 import { PALETTE } from './palette';
 import { createBuilder } from './builder';
+import { createGrabber } from './grab';
 import { createRobot } from './robot';
 import { addRoom } from './world';
 
@@ -37,7 +38,7 @@ export async function startScene(canvas: HTMLCanvasElement) {
   }
 
   addRoom(scene);
-  const { left, right } = addBricks(scene);
+  const { left, right, yard } = addBricks(scene);
   const largestCrew = Math.max(left.slots.length, right.slots.length);
   const effects = createEffects(scene);
 
@@ -45,12 +46,14 @@ export async function startScene(canvas: HTMLCanvasElement) {
     { x: -ROBOT_X, frontAngle: -Math.PI / 2, crew: left },
     { x: ROBOT_X, frontAngle: (Math.PI * 3) / 2, crew: right },
   ];
-  const builders = crews.map(({ x, frontAngle, crew }) => {
+  const workers = crews.map(({ x, frontAngle, crew }, index) => {
     const robot = createRobot();
     robot.root.position.set(x, 0, ROBOT_Z);
     scene.add(robot.root);
-    return createBuilder(robot, frontAngle, crew, largestCrew, effects);
+    return { robot, builder: createBuilder(robot, frontAngle, crew, largestCrew, effects, yard, index) };
   });
+  const builders = workers.map(({ builder }) => builder);
+  const grabber = createGrabber(canvas, camera, yard, workers, effects);
 
   // Visitors who ask for less motion get the finished name, and can press play themselves.
   let paused = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -67,6 +70,8 @@ export async function startScene(canvas: HTMLCanvasElement) {
 
   let speed = 3;
   let needsRender = true;
+  // A brick let go of while paused still lands with its dust, on a clock of its own.
+  let tidying = false;
 
   function resize() {
     const { innerWidth: width, innerHeight: height } = window;
@@ -93,8 +98,15 @@ export async function startScene(canvas: HTMLCanvasElement) {
     // A long gap means the tab was hidden: carry on from where it was instead of jumping.
     const elapsed = Math.min((now - previous) / 1000, 0.1);
     previous = now;
-    if (!paused) {
-      for (const builder of builders) builder.update(elapsed * speed);
+    if (!paused) for (const builder of builders) builder.update(elapsed * speed);
+    if (grabber.busy) {
+      grabber.update(elapsed);
+      tidying = true;
+      needsRender = true;
+    } else if (!effects.active) {
+      tidying = false;
+    }
+    if (!paused || tidying) {
       effects.update(elapsed * speed);
       needsRender = true;
     }
@@ -116,7 +128,9 @@ export async function startScene(canvas: HTMLCanvasElement) {
       speed = value;
     },
     reset() {
+      grabber.cancel();
       effects.clear();
+      resetYard(yard);
       for (const builder of builders) builder.reset();
       needsRender = true;
     },
