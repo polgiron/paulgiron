@@ -11,12 +11,16 @@ const LETTERS = {
   U: ['#.#', '#.#', '#.#', '#.#', '###'],
   L: ['#..', '#..', '#..', '#..', '###'],
   H: ['#.#', '#.#', '###', '#.#', '#.#'],
-  i: ['.#.', '...', '##.', '.#.', '###'],
+  I: ['###', '.#.', '.#.', '.#.', '###'],
 };
 // What the robots build: any letters from above, split between the two arms.
-const NAME = ['H', 'i'] as const;
+const NAME = ['H', 'I'] as const;
 const LETTER_GAP = 1;
 const LOOSE_BRICKS = 30;
+// Spots left empty, so that an arm always has somewhere to put a brick it needs out of the way.
+const EMPTY_SPOTS = 2;
+// How many of each arm's red bricks start under another colour.
+export const BURIED_REDS = 3;
 // Half sizes on the floor: a brick, and the space its claw needs along the brick's front and back.
 const BODY = [0.48, 0.48] as const;
 const CLAW = [0.2, 1.04] as const;
@@ -66,6 +70,7 @@ export interface Crew {
   /** Where this robot's bricks go in the name, in building order. */
   slots: Vector3[];
   bricks: Brick[];
+  emptySpots: Spot[];
 }
 
 /** Whether two rectangles on the floor overlap, by the separating axis test. */
@@ -89,15 +94,15 @@ function rectanglesTouch(
 /** Loose bricks around a robot, some in stacks, spaced so its open claw fits around each one without touching the next. */
 function scatterSpots(side: number, random: () => number) {
   const spots: Spot[] = [];
-  for (let attempt = 0; attempt < 40000 && spots.length < LOOSE_BRICKS; attempt++) {
+  const total = LOOSE_BRICKS + EMPTY_SPOTS;
+  for (let attempt = 0; attempt < 40000 && spots.length < total; attempt++) {
     const position = new Vector3(side * (7.7 + random() * 8), BRICK / 2, -5.1 + random() * 10.6);
     const yaw = (random() - 0.5) * 2.6;
     const reach = Math.hypot(position.x - side * ROBOT_X, position.z - ROBOT_Z);
     if (reach < 3 || reach > 8.6) continue;
     // Stays inside the frame, which narrows towards the camera.
     if (Math.abs(position.x) > 15.4 - Math.max(position.z, 0) * 0.43) continue;
-    const roll = random();
-    const height = Math.min(roll < 0.12 ? 3 : roll < 0.42 ? 2 : 1, LOOSE_BRICKS - spots.length);
+    const height = Math.min(random() < 0.42 ? 2 : 1, total - spots.length);
     // Each brick in a stack sits a little askew on the one below.
     const yaws = Array.from({ length: height }, (_, level) => yaw + (level > 0 ? (random() - 0.5) * 0.5 : 0));
     const clear = spots.every((spot) =>
@@ -139,17 +144,32 @@ export function addBricks(scene: Scene) {
     return slots.sort((a, b) => a.y - b.y);
   });
 
-  const crew = (slots: Vector3[], side: number): Crew => ({
-    slots,
-    bricks: scatterSpots(side, random).map((spot) => {
-      const colorName = PALETTE.bricks[Math.floor(random() * PALETTE.bricks.length)];
-      const mesh = makeBrick(colorName);
-      mesh.position.copy(spot.position);
-      mesh.rotation.y = spot.yaw;
-      scene.add(mesh);
-      return { mesh, colorName, spot, firstSpot: spot };
-    }),
-  });
+  const otherColors = PALETTE.bricks.filter((name) => name !== PALETTE.letters);
+
+  const crew = (slots: Vector3[], side: number): Crew => {
+    const spots = scatterSpots(side, random);
+    const shuffled = spots
+      .map((spot) => ({ spot, order: random() }))
+      .sort((a, b) => a.order - b.order)
+      .map(({ spot }) => spot);
+    // Exactly enough red for the letters: a few buried, for the arm to dig out, and the rest in plain sight.
+    const buried = shuffled.filter((spot) => spot.above).slice(0, BURIED_REDS);
+    const open = shuffled.filter((spot) => !spot.above && !(spot.below && buried.includes(spot.below)));
+    const emptySpots = open.slice(0, EMPTY_SPOTS);
+    const forLetters = new Set([...buried, ...open.slice(EMPTY_SPOTS, EMPTY_SPOTS + slots.length - buried.length)]);
+    return {
+      slots,
+      emptySpots,
+      bricks: spots.filter((spot) => !emptySpots.includes(spot)).map((spot) => {
+        const colorName = forLetters.has(spot) ? PALETTE.letters : otherColors[Math.floor(random() * otherColors.length)];
+        const mesh = makeBrick(colorName);
+        mesh.position.copy(spot.position);
+        mesh.rotation.y = spot.yaw;
+        scene.add(mesh);
+        return { mesh, colorName, spot, firstSpot: spot };
+      }),
+    };
+  };
 
   const middle = Math.ceil(letters.length / 2);
   return { left: crew(letters.slice(0, middle).flat(), -1), right: crew(letters.slice(middle).reverse().flat(), 1) };

@@ -11,6 +11,8 @@ export const PALETTE = {
     '#3b6fce', '#3b6fce', '#3b6fce',
     '#5f9fe8', '#f0929e', '#7a5c9e', '#e98a58', '#4fa865',
   ],
+  // The letters are built from this colour only.
+  letters: '#e23d3d',
   smoke: '#f6efdc',
   ink: '#2a2a2e',
   ambient: '#f2f1f4',
