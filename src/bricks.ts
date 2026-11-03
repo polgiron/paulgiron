@@ -20,8 +20,6 @@ const LETTER_GAP = 1;
 const LOOSE_BRICKS = 30;
 // Spots left empty, so that an arm always has somewhere to put a brick it needs out of the way.
 const EMPTY_SPOTS = 2;
-// How many of each arm's red bricks start under another colour.
-export const BURIED_REDS = 3;
 // Half sizes on the floor: a brick, and the space its claw needs along the brick's front and back.
 export const BODY = [0.48, 0.48] as const;
 export const CLAW = [0.2, 1.04] as const;
@@ -59,14 +57,12 @@ function createBrickFactory() {
 export interface Spot {
   position: Vector3;
   yaw: number;
-  /** The neighbours in a stack: nothing rests on a free spot, and nothing can rest in mid-air. */
-  below?: Spot;
+  /** The next spot up in a stack, as a spot with one above it can't start out free. */
   above?: Spot;
 }
 
 export interface Brick {
   mesh: Mesh;
-  colorName: string;
   spot: Spot;
   firstSpot: Spot;
   /** Its place in the name, while it has one. */
@@ -164,7 +160,7 @@ function scatterSpots(side: number, random: () => number) {
     if (!clear) continue;
     let below: Spot | undefined;
     yaws.forEach((turn, level) => {
-      const spot: Spot = { position: position.clone().setY(BRICK * (level + 0.5)), yaw: turn, below };
+      const spot: Spot = { position: position.clone().setY(BRICK * (level + 0.5)), yaw: turn };
       if (below) below.above = spot;
       spots.push(spot);
       below = spot;
@@ -192,30 +188,23 @@ export function addBricks(scene: Scene) {
     return slots.sort((a, b) => a.y - b.y);
   });
 
-  const otherColors = PALETTE.bricks.filter((name) => name !== PALETTE.letters);
-
   const crew = (slots: Vector3[], side: number): Crew => {
     const spots = scatterSpots(side, random);
     const shuffled = spots
       .map((spot) => ({ spot, order: random() }))
       .sort((a, b) => a.order - b.order)
       .map(({ spot }) => spot);
-    // Exactly enough red for the letters: a few buried, for the arm to dig out, and the rest in plain sight.
-    const buried = shuffled.filter((spot) => spot.above).slice(0, BURIED_REDS);
-    const open = shuffled.filter((spot) => !spot.above && !(spot.below && buried.includes(spot.below)));
-    const emptySpots = open.slice(0, EMPTY_SPOTS);
-    const forLetters = new Set([...buried, ...open.slice(EMPTY_SPOTS, EMPTY_SPOTS + slots.length - buried.length)]);
+    const emptySpots = shuffled.filter((spot) => !spot.above).slice(0, EMPTY_SPOTS);
     return {
       side,
       slots,
       emptySpots,
       bricks: spots.filter((spot) => !emptySpots.includes(spot)).map((spot) => {
-        const colorName = forLetters.has(spot) ? PALETTE.letters : otherColors[Math.floor(random() * otherColors.length)];
-        const mesh = makeBrick(colorName);
+        const mesh = makeBrick(PALETTE.bricks[Math.floor(random() * PALETTE.bricks.length)]);
         mesh.position.copy(spot.position);
         mesh.rotation.y = spot.yaw;
         scene.add(mesh);
-        return { mesh, colorName, spot, firstSpot: spot };
+        return { mesh, spot, firstSpot: spot };
       }),
     };
   };

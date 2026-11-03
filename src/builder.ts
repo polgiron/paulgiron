@@ -1,9 +1,8 @@
 import { Vector3 } from 'three/webgpu';
-import { BODY, BRICK, BURIED_REDS, CLAW, MAX_REACH, restsOn, scatterPlace, takeOut } from './bricks';
+import { BODY, BRICK, CLAW, MAX_REACH, restsOn, scatterPlace, takeOut } from './bricks';
 import type { Brick, Crew, Spot, Yard } from './bricks';
 import { rectanglesTouch } from './collisions';
 import type { Effects } from './effects';
-import { PALETTE } from './palette';
 import { heldPosition, setGrip, setPose, solveReach } from './robot';
 import type { Reach, Robot } from './robot';
 
@@ -29,13 +28,12 @@ function randomItem<T>(items: T[]) {
 }
 
 /**
- * Drives one robot for ever: it builds its part of the name from the red bricks nearby,
+ * Drives one robot for ever: it builds its part of the name from the bricks nearby, whatever their colour,
  * then takes it apart again, dropping the bricks in random free spots.
  * The arm only swings through the half of the circle centred on frontAngle, so it never meets the back wall.
- * Each way takes both robots the same number of moves. Building, they dig out buried red bricks, and a smaller crew
- * sorts other colours aside between its own bricks. Taking apart, they bury a few red bricks again for the next round.
+ * Each way takes both robots the same number of moves: a smaller crew moves spare bricks around between its own.
  * Visitors can move bricks at any time, so every move is worked out from where the bricks are now. An arm uses any
- * brick it can reach, and with no red brick in reach it waits for one, however long that takes.
+ * brick it can reach, and with none in reach it waits for one, however long that takes.
  */
 export function createBuilder(
   robot: Robot,
@@ -56,7 +54,6 @@ export function createBuilder(
   const across = new Vector3();
   const dashAt = new Vector3();
   const towardCamera = new Vector3(0, 0, 1);
-  const movesEachWay = largestCrew + BURIED_REDS;
   let movesMade = 0;
   let delta = 0;
   let held: Brick | null = null;
@@ -151,11 +148,6 @@ export function createBuilder(
     return y < TRAVEL_HEIGHT && Math.hypot(x - base.x, z - base.z) <= MAX_REACH;
   }
 
-  /** Whether the other arm could get to a brick here too. */
-  function otherCanReach({ x, z }: Vector3) {
-    return Math.hypot(x + base.x, z - base.z) <= MAX_REACH;
-  }
-
   /** Whether an open claw fits around a brick here. Everything lower than its fingertips is out of its way. */
   function clawFits(position: Vector3, yaw: number, moving: Brick | null) {
     return standing(moving).every(
@@ -226,10 +218,6 @@ export function createBuilder(
     return looseBricks().filter((brick) => isAvailable(brick) && !brickOn(brick));
   }
 
-  function isForLetters(brick: Brick) {
-    return brick.colorName === PALETTE.letters;
-  }
-
   /** Any brick, or any place the other robot is about to use, in the way of a brick standing here. */
   function isBlocked(position: Vector3, yaw: number, moving: Brick | null) {
     const clash = (y: number, other: Vector3, turn: number) =>
@@ -265,11 +253,6 @@ export function createBuilder(
     return standing(brick).find(({ mesh }) => restsOn(mesh.position, mesh.rotation.y, position, rotation.y));
   }
 
-  /** The brick a spot would rest on, if any. */
-  function brickUnder(spot: Spot) {
-    return standing().find(({ mesh }) => restsOn(spot.position, spot.yaw, mesh.position, mesh.rotation.y));
-  }
-
   /** A new spot on the floor, for when visitors have left none of the others usable. */
   function freshSpot(moving: Brick): Spot {
     for (let tries = 0; ; ) {
@@ -291,42 +274,10 @@ export function createBuilder(
     );
   }
 
-  function buriedReds() {
-    return looseBricks().filter((brick) => {
-      const cover = isForLetters(brick) && canReach(brick.mesh.position) && brickOn(brick);
-      return cover && !isForLetters(cover);
-    }).length;
-  }
-
-  /**
-   * A loose red brick this arm can have, if there is one. Those only it can reach come first, leaving the others for
-   * the other arm. The top one of two red bricks comes first, to avoid moving a red brick for nothing.
-   */
-  function chooseBrick() {
-    const reds = looseBricks().filter((brick) => isForLetters(brick) && isAvailable(brick));
-    if (reds.length === 0) return null;
-    const own = reds.filter(({ mesh }) => !otherCanReach(mesh.position));
-    const brick = randomItem(own.length > 0 ? own : reds);
-    const cover = brickOn(brick);
-    return cover && isForLetters(cover) ? cover : brick;
-  }
-
-  /** Where to drop a brick. Red bricks go low and other colours high, leaving room to bury a red one when wanted. */
-  function spotFor(brick: Brick, bury: boolean) {
-    const spots = droppableSpots(brick).filter((spot) => brickUnder(spot) !== brick);
-    if (spots.length === 0) return freshSpot(brick);
-    const onRed = spots.filter((spot) => {
-      const under = brickUnder(spot);
-      return under && isForLetters(under);
-    });
-    const clear = spots.filter((spot) => !onRed.includes(spot));
-    if (isForLetters(brick)) {
-      const low = clear.filter((spot) => spot.above);
-      return randomItem(low.length > 0 ? low : clear.length > 0 ? clear : spots);
-    }
-    const high = clear.filter((spot) => !spot.above);
-    const preferred = bury ? onRed : high.length > 0 ? high : clear;
-    return randomItem(preferred.length > 0 ? preferred : spots);
+  /** Where to drop a brick. */
+  function spotFor(brick: Brick) {
+    const spots = droppableSpots(brick);
+    return spots.length > 0 ? randomItem(spots) : freshSpot(brick);
   }
 
   function* wait(seconds: number) {
@@ -338,13 +289,13 @@ export function createBuilder(
   }
 
   /** This brick's share of the moves left over, spread evenly along the name. */
-  function* moveSpareBricks(slotsLeft: number, digsLeft: number, bury: boolean) {
-    const moves = Math.round((movesEachWay - movesMade - slotsLeft - digsLeft) / slotsLeft);
+  function* moveSpareBricks(slotsLeft: number) {
+    const moves = Math.round((largestCrew - movesMade - slotsLeft) / slotsLeft);
     for (let move = 0; move < moves; move++) {
-      const spare = pickableBricks().filter((other) => !isForLetters(other));
+      const spare = pickableBricks();
       if (spare.length === 0) return;
       const brick = randomItem(spare);
-      yield* moveLooseBrick(brick, spotFor(brick, bury && buriedReds() < BURIED_REDS));
+      yield* moveLooseBrick(brick, spotFor(brick));
     }
   }
 
@@ -357,7 +308,7 @@ export function createBuilder(
       }
       yield* uncover(cover);
       if (brickOn(cover) || !isAvailable(cover)) continue;
-      yield* moveLooseBrick(cover, spotFor(cover, false));
+      yield* moveLooseBrick(cover, spotFor(cover));
     }
   }
 
@@ -376,11 +327,11 @@ export function createBuilder(
   function* build() {
     for (let [slot] = emptySlots(); slot; [slot] = emptySlots()) {
       // Nothing to build with, for now. The arm waits for a visitor or the other arm to change that.
-      if (!chooseBrick()) {
+      if (pickableBricks().length === 0) {
         yield;
         continue;
       }
-      yield* moveSpareBricks(emptySlots().length, buriedReds(), false);
+      yield* moveSpareBricks(emptySlots().length);
       if (brickInName(slot)) continue;
       const inTheWay = brickInSlot(slot);
       if (inTheWay) {
@@ -389,17 +340,12 @@ export function createBuilder(
           continue;
         }
         yield* uncover(inTheWay);
-        if (!brickOn(inTheWay) && isAvailable(inTheWay)) yield* moveLooseBrick(inTheWay, spotFor(inTheWay, false));
+        if (!brickOn(inTheWay) && isAvailable(inTheWay)) yield* moveLooseBrick(inTheWay, spotFor(inTheWay));
         continue;
       }
-      const brick = chooseBrick();
-      if (!brick) continue;
-      yield* uncover(brick);
-      // Anything may have happened while the arm was busy with the cover.
-      if (brickInName(slot) || brickInSlot(slot) || !isAvailable(brick) || brickOn(brick)) {
-        yield;
-        continue;
-      }
+      const spare = pickableBricks();
+      if (spare.length === 0) continue;
+      const brick = randomItem(spare);
       const target = slot;
       yield* carry(brick, target, 0, () => {
         brick.slot = target;
@@ -411,14 +357,14 @@ export function createBuilder(
     for (let slot = fullSlots().at(-1); slot; slot = fullSlots().at(-1)) {
       const brick = brickInName(slot);
       if (!brick) continue;
-      yield* moveSpareBricks(fullSlots().length, 0, true);
+      yield* moveSpareBricks(fullSlots().length);
       if (brick.slot !== slot) continue;
       yield* uncover(brick);
       if (brick.slot !== slot || brickOn(brick)) {
         yield;
         continue;
       }
-      yield* moveLooseBrick(brick, spotFor(brick, false));
+      yield* moveLooseBrick(brick, spotFor(brick));
     }
   }
 
@@ -455,7 +401,7 @@ export function createBuilder(
     if (at.height < TRAVEL_HEIGHT) yield* moveTo({ ...at, height: TRAVEL_HEIGHT }, VERTICAL_SECONDS);
     if (held) {
       const brick = held;
-      const spot = spotFor(brick, false);
+      const spot = spotFor(brick);
       yard.moves[index] = { brick, to: spot.position, yaw: spot.yaw };
       yield* place(brick, spot.position, spot.yaw, () => stand(brick, spot));
     }
@@ -501,16 +447,9 @@ export function createBuilder(
     /** Jumps straight to the finished name, for visitors who asked for less motion. */
     showFinished() {
       for (const slot of slots) {
-        const brick = chooseBrick();
-        if (!brick) continue;
-        const cover = brickOn(brick);
-        if (cover) {
-          const spot = spotFor(cover, false);
-          takeOut(yard, cover);
-          stand(cover, spot);
-          cover.mesh.position.copy(spot.position);
-          cover.mesh.rotation.y = spot.yaw;
-        }
+        const spare = pickableBricks();
+        if (spare.length === 0) break;
+        const brick = randomItem(spare);
         takeOut(yard, brick);
         brick.slot = slot;
         brick.mesh.position.copy(slot);
