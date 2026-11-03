@@ -132,7 +132,6 @@ export function createBuilder(robot: Robot, frontAngle: number, crew: Crew, larg
     held = brick;
     effects.dust(from);
     yield* moveTo(reachOf(from, fromYaw, TRAVEL_HEIGHT), VERTICAL_SECONDS);
-    effects.steam(robot.shoulder.getWorldPosition(scratch), Math.sign(base.x));
     yield* swingTo(reachOf(to, toYaw, TRAVEL_HEIGHT));
     yield* moveTo(reachOf(to, toYaw), VERTICAL_SECONDS);
     held = null;
