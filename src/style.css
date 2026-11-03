@@ -159,7 +159,7 @@ h1 {
 /* Too narrow for one row next to Contact: speeds drop under play and reset. */
 @media (max-width: 480px) {
   .controls {
-    width: 8rem;
+    width: 10.625rem;
   }
 }
 

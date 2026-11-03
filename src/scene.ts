@@ -63,7 +63,7 @@ export async function startScene(canvas: HTMLCanvasElement) {
 
   const { pipeline, pixelRatio } = createInkPipeline(renderer, scene, camera, PALETTE.ink);
 
-  let speed = 1;
+  let speed = 2;
   let needsRender = true;
 
   function resize() {
