@@ -1,0 +1,154 @@
+@import '@fontsource-variable/bricolage-grotesque/index.css';
+
+:root {
+  --wall: #183cc4;
+  --ribbon: #ff7a5c;
+  --shadow: #0d1668;
+  --contact: #ffdf4f;
+  --notch: 0.72em;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: var(--wall);
+  color: var(--ribbon);
+  font-family: 'Bricolage Grotesque Variable', system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  touch-action: none;
+}
+
+::selection {
+  background: var(--contact);
+  color: var(--shadow);
+}
+
+#scene {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  opacity: 0;
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.scene-ready #scene {
+  opacity: 1;
+}
+
+/* The ribbon carries the name on screen. This text is its accessible and no-3D form. */
+h1 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.no-scene h1 {
+  position: fixed;
+  inset: 0 0 12vh;
+  width: auto;
+  height: auto;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  clip-path: none;
+  text-align: center;
+  white-space: normal;
+  font-size: clamp(3.5rem, 13vw, 6rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.contact {
+  position: fixed;
+  left: 50%;
+  bottom: max(2.75rem, calc(env(safe-area-inset-bottom) + 1.5rem));
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.25rem;
+  padding: 0 2.6em;
+  color: var(--shadow);
+  font-size: 1.125rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  filter: drop-shadow(0.35rem 0.55rem 0.5rem rgb(13 22 104 / 0.5));
+}
+
+/* A short cut length of ribbon. The clip sits on a layer so the focus ring isn't clipped. */
+.contact::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--contact);
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    calc(100% - var(--notch)) 50%,
+    100% 100%,
+    0 100%,
+    var(--notch) 50%
+  );
+}
+
+.contact:focus-visible {
+  outline: 3px solid var(--contact);
+  outline-offset: 5px;
+}
+
+/* Once the scene is up, the same ribbon is a lit mesh under this label. */
+.contact::before {
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.scene-ready .contact {
+  filter: none;
+}
+
+.scene-ready .contact::before {
+  opacity: 0;
+}
+
+.contact span {
+  display: block;
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.contact:active span {
+  transform: scale(0.97);
+}
+
+@media (hover: hover) {
+  .contact:hover span {
+    transform: translateY(-2px) rotate(-1.5deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #scene,
+  .contact::before,
+  .contact span {
+    transition: none;
+  }
+}
