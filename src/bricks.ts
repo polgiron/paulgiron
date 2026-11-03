@@ -10,8 +10,11 @@ const LETTERS = {
   A: ['###', '#.#', '###', '#.#', '#.#'],
   U: ['#.#', '#.#', '#.#', '#.#', '###'],
   L: ['#..', '#..', '#..', '#..', '###'],
+  H: ['#.#', '#.#', '###', '#.#', '#.#'],
+  i: ['.#.', '...', '##.', '.#.', '###'],
 };
-const NAME = ['P', 'A', 'U', 'L'] as const;
+// What the robots build: any letters from above, split between the two arms.
+const NAME = ['H', 'i'] as const;
 const LETTER_GAP = 1;
 const LOOSE_BRICKS = 30;
 // Half sizes on the floor: a brick, and the space its claw needs along the brick's front and back.
@@ -132,6 +135,6 @@ export function addBricks(scene: Scene) {
     }),
   });
 
-  const [p, a, u, l] = letters;
-  return { left: crew([...p, ...a], -1), right: crew([...l, ...u], 1) };
+  const middle = Math.ceil(letters.length / 2);
+  return { left: crew(letters.slice(0, middle).flat(), -1), right: crew(letters.slice(middle).reverse().flat(), 1) };
 }
