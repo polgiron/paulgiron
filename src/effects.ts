@@ -132,12 +132,20 @@ export function createEffects(scene: Scene) {
         return !done;
       });
     },
-    clear() {
+    /** Whether anything is still moving. */
+    get active() {
+      return puffs.length > 0 || dashes.length > 0 || settling.length > 0;
+    },
+    /** Puts every settling brick back in its true shape and place, at once. */
+    finishSettling() {
       for (const item of settling) {
         item.mesh.scale.setScalar(1);
         item.mesh.position.y = item.y;
       }
       settling = [];
+    },
+    clear() {
+      this.finishSettling();
       puffs = [];
       dashes = [];
       puffMesh.count = 0;

@@ -1,5 +1,6 @@
 import { BoxGeometry, Mesh, MeshToonNodeMaterial, Vector3 } from 'three/webgpu';
 import type { Scene } from 'three/webgpu';
+import { rectanglesTouch } from './collisions';
 import { PALETTE } from './palette';
 
 export const BRICK = 0.9;
@@ -19,11 +20,13 @@ const LETTER_GAP = 1;
 const LOOSE_BRICKS = 30;
 // Spots left empty, so that an arm always has somewhere to put a brick it needs out of the way.
 const EMPTY_SPOTS = 2;
-// How many of each arm's red bricks start under another colour.
-export const BURIED_REDS = 3;
 // Half sizes on the floor: a brick, and the space its claw needs along the brick's front and back.
-const BODY = [0.48, 0.48] as const;
-const CLAW = [0.2, 1.04] as const;
+export const BODY = [0.48, 0.48] as const;
+export const CLAW = [0.2, 1.04] as const;
+// A brick's foot, just short of the brick, so that neighbours side by side don't count as touching.
+const FOOT = [0.44, 0.44] as const;
+// How far an arm reaches: far enough to lift a brick to its travel height from there.
+export const MAX_REACH = 8.6;
 
 // Standing behind the name, each arm reaches a brick from behind and never crosses another letter.
 export const ROBOT_X = 8;
@@ -54,41 +57,85 @@ function createBrickFactory() {
 export interface Spot {
   position: Vector3;
   yaw: number;
-  /** The neighbours in a stack: nothing rests on a free spot, and nothing can rest in mid-air. */
-  below?: Spot;
+  /** The next spot up in a stack, as a spot with one above it can't start out free. */
   above?: Spot;
 }
 
 export interface Brick {
   mesh: Mesh;
-  colorName: string;
   spot: Spot;
   firstSpot: Spot;
+  /** Its place in the name, while it has one. */
+  slot?: Vector3;
 }
 
 export interface Crew {
+  /** Which half of the room this robot works in: -1 is left, 1 is right. */
+  side: number;
   /** Where this robot's bricks go in the name, in building order. */
   slots: Vector3[];
   bricks: Brick[];
   emptySpots: Spot[];
 }
 
-/** Whether two rectangles on the floor overlap, by the separating axis test. */
-function rectanglesTouch(
-  a: Vector3,
-  aYaw: number,
-  aHalf: readonly [number, number],
-  b: Vector3,
-  bYaw: number,
-  bHalf: readonly [number, number],
-) {
-  const axes = [aYaw, aYaw + Math.PI / 2, bYaw, bYaw + Math.PI / 2];
-  const extent = (yaw: number, half: readonly [number, number], axis: number) =>
-    half[0] * Math.abs(Math.cos(axis - yaw)) + half[1] * Math.abs(Math.sin(axis - yaw));
-  return axes.every((axis) => {
-    const gap = Math.abs((b.x - a.x) * Math.cos(axis) - (b.z - a.z) * Math.sin(axis));
-    return gap < extent(aYaw, aHalf, axis) + extent(bYaw, bHalf, axis);
-  });
+/** A move a robot has set out on, until the brick is put down. */
+export interface Move {
+  brick: Brick;
+  to: Vector3;
+  yaw: number;
+}
+
+/** What the robots share: any brick belongs to whichever arm can reach it. */
+export interface Yard {
+  bricks: Brick[];
+  freeSpots: Spot[];
+  firstFreeSpots: Spot[];
+  /** The brick in a visitor's hand, or falling from it. */
+  grabbed: Brick | null;
+  /** The bricks in a claw. */
+  carried: Set<Brick>;
+  /** What each robot is doing now. */
+  moves: (Move | null)[];
+  /** How many times each robot has finished building or unbuilding, so neither starts the next round ahead of the other. */
+  legs: number[];
+}
+
+/** A brick has left where it was: its slot in the name, or its spot on the floor. */
+export function takeOut(yard: Yard, brick: Brick) {
+  if (brick.slot) brick.slot = undefined;
+  else yard.freeSpots.push(brick.spot);
+}
+
+/** Back to the opening: every brick loose where it started. */
+export function resetYard(yard: Yard) {
+  for (const brick of yard.bricks) {
+    brick.spot = brick.firstSpot;
+    brick.slot = undefined;
+    brick.mesh.position.copy(brick.spot.position);
+    brick.mesh.rotation.y = brick.spot.yaw;
+  }
+  yard.freeSpots = [...yard.firstFreeSpots];
+  yard.grabbed = null;
+  yard.carried.clear();
+  yard.moves.fill(null);
+  yard.legs.fill(0);
+}
+
+/** Whether a brick at top sits directly on a brick at bottom. */
+export function restsOn(top: Vector3, topYaw: number, bottom: Vector3, bottomYaw: number) {
+  // Loose enough to still hold while a brick squashes as it lands.
+  return Math.abs(top.y - bottom.y - BRICK) < 0.1 && rectanglesTouch(top, topYaw, FOOT, bottom, bottomYaw, FOOT);
+}
+
+/** A random place on the floor around a robot, or nothing if this try fell out of its reach or out of the frame. */
+export function scatterPlace(side: number, random: () => number) {
+  const position = new Vector3(side * (7.7 + random() * 8), BRICK / 2, -5.1 + random() * 10.6);
+  const yaw = (random() - 0.5) * 2.6;
+  const reach = Math.hypot(position.x - side * ROBOT_X, position.z - ROBOT_Z);
+  if (reach < 3 || reach > MAX_REACH) return null;
+  // Stays inside the frame, which narrows towards the camera.
+  if (Math.abs(position.x) > 15.4 - Math.max(position.z, 0) * 0.43) return null;
+  return { position, yaw };
 }
 
 /** Loose bricks around a robot, some in stacks, spaced so its open claw fits around each one without touching the next. */
@@ -96,12 +143,9 @@ function scatterSpots(side: number, random: () => number) {
   const spots: Spot[] = [];
   const total = LOOSE_BRICKS + EMPTY_SPOTS;
   for (let attempt = 0; attempt < 40000 && spots.length < total; attempt++) {
-    const position = new Vector3(side * (7.7 + random() * 8), BRICK / 2, -5.1 + random() * 10.6);
-    const yaw = (random() - 0.5) * 2.6;
-    const reach = Math.hypot(position.x - side * ROBOT_X, position.z - ROBOT_Z);
-    if (reach < 3 || reach > 8.6) continue;
-    // Stays inside the frame, which narrows towards the camera.
-    if (Math.abs(position.x) > 15.4 - Math.max(position.z, 0) * 0.43) continue;
+    const place = scatterPlace(side, random);
+    if (!place) continue;
+    const { position, yaw } = place;
     const height = Math.min(random() < 0.42 ? 2 : 1, total - spots.length);
     // Each brick in a stack sits a little askew on the one below.
     const yaws = Array.from({ length: height }, (_, level) => yaw + (level > 0 ? (random() - 0.5) * 0.5 : 0));
@@ -116,7 +160,7 @@ function scatterSpots(side: number, random: () => number) {
     if (!clear) continue;
     let below: Spot | undefined;
     yaws.forEach((turn, level) => {
-      const spot: Spot = { position: position.clone().setY(BRICK * (level + 0.5)), yaw: turn, below };
+      const spot: Spot = { position: position.clone().setY(BRICK * (level + 0.5)), yaw: turn };
       if (below) below.above = spot;
       spots.push(spot);
       below = spot;
@@ -144,33 +188,39 @@ export function addBricks(scene: Scene) {
     return slots.sort((a, b) => a.y - b.y);
   });
 
-  const otherColors = PALETTE.bricks.filter((name) => name !== PALETTE.letters);
-
   const crew = (slots: Vector3[], side: number): Crew => {
     const spots = scatterSpots(side, random);
     const shuffled = spots
       .map((spot) => ({ spot, order: random() }))
       .sort((a, b) => a.order - b.order)
       .map(({ spot }) => spot);
-    // Exactly enough red for the letters: a few buried, for the arm to dig out, and the rest in plain sight.
-    const buried = shuffled.filter((spot) => spot.above).slice(0, BURIED_REDS);
-    const open = shuffled.filter((spot) => !spot.above && !(spot.below && buried.includes(spot.below)));
-    const emptySpots = open.slice(0, EMPTY_SPOTS);
-    const forLetters = new Set([...buried, ...open.slice(EMPTY_SPOTS, EMPTY_SPOTS + slots.length - buried.length)]);
+    const emptySpots = shuffled.filter((spot) => !spot.above).slice(0, EMPTY_SPOTS);
     return {
+      side,
       slots,
       emptySpots,
       bricks: spots.filter((spot) => !emptySpots.includes(spot)).map((spot) => {
-        const colorName = forLetters.has(spot) ? PALETTE.letters : otherColors[Math.floor(random() * otherColors.length)];
-        const mesh = makeBrick(colorName);
+        const mesh = makeBrick(PALETTE.bricks[Math.floor(random() * PALETTE.bricks.length)]);
         mesh.position.copy(spot.position);
         mesh.rotation.y = spot.yaw;
         scene.add(mesh);
-        return { mesh, colorName, spot, firstSpot: spot };
+        return { mesh, spot, firstSpot: spot };
       }),
     };
   };
 
   const middle = Math.ceil(letters.length / 2);
-  return { left: crew(letters.slice(0, middle).flat(), -1), right: crew(letters.slice(middle).reverse().flat(), 1) };
+  const left = crew(letters.slice(0, middle).flat(), -1);
+  const right = crew(letters.slice(middle).reverse().flat(), 1);
+  const firstFreeSpots = [...left.emptySpots, ...right.emptySpots];
+  const yard: Yard = {
+    bricks: [...left.bricks, ...right.bricks],
+    freeSpots: [...firstFreeSpots],
+    firstFreeSpots,
+    grabbed: null,
+    carried: new Set(),
+    moves: [null, null],
+    legs: [0, 0],
+  };
+  return { left, right, yard };
 }

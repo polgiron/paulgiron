@@ -1,9 +1,7 @@
 import { Color, RenderPipeline } from 'three/webgpu';
-import type { Camera, Node, Scene, WebGPURenderer } from 'three/webgpu';
+import type { Node, PerspectiveCamera, Scene, WebGPURenderer } from 'three/webgpu';
 import {
   abs,
-  cameraFar,
-  cameraNear,
   unpackRGBToNormal,
   packNormalToRGB,
   float,
@@ -27,7 +25,7 @@ import {
 const LINE_WIDTH = 0.8;
 
 /** Draws the ink: finds where surfaces fold or overlap, and inks those lines by hand. */
-export function createInkPipeline(renderer: WebGPURenderer, scene: Scene, camera: Camera, ink: string) {
+export function createInkPipeline(renderer: WebGPURenderer, scene: Scene, camera: PerspectiveCamera, ink: string) {
   const pipeline = new RenderPipeline(renderer);
   const scenePass = pass(scene, camera);
   scenePass.setMRT(mrt({ output, normal: packNormalToRGB(normalView) }));
@@ -37,9 +35,12 @@ export function createInkPipeline(renderer: WebGPURenderer, scene: Scene, camera
   const depthTexture = scenePass.getTextureNode('depth');
   const inkColor = uniform(new Color(ink), 'color').rgb;
   const pixelRatio = uniform(renderer.getPixelRatio());
+  // The scene camera's own range: cameraNear and cameraFar would be those of the flat camera drawing this pass.
+  const near = uniform(camera.near);
+  const far = uniform(camera.far);
 
   const inverseZ = (coordinate: Node<'vec2'>) =>
-    float(1).div(perspectiveDepthToViewZ(depthTexture.sample(coordinate).r, cameraNear, cameraFar));
+    float(1).div(perspectiveDepthToViewZ(depthTexture.sample(coordinate).r, near, far));
 
   pipeline.outputNode = Fn(() => {
     const step = vec2(pixelRatio.mul(LINE_WIDTH)).div(screenSize);
