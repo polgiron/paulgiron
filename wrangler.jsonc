@@ -2,6 +2,8 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "paulgiron",
   "compatibility_date": "2026-11-03",
+  // Branch builds deploy with `wrangler preview`, which requires this block even when empty.
+  "previews": {},
   "assets": {
     "directory": "./dist",
     // Old links land on the page rather than on a bare 404.
