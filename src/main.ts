@@ -7,7 +7,9 @@ if (!canvas || !controls) throw new Error('Missing page elements');
 // The name and Contact are plain HTML, so the page still works if the 3D can't run.
 try {
   const { startScene } = await import('./scene');
-  const scene = await startScene(canvas);
+  const contact = document.querySelector('.contact');
+  contact?.addEventListener('animationend', () => contact.classList.remove('is-nudged'));
+  const scene = await startScene(canvas, () => contact?.classList.add('is-nudged'));
   setupControls(controls, scene);
   document.documentElement.classList.add('scene-ready');
 } catch (error) {

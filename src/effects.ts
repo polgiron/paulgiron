@@ -9,6 +9,7 @@ const DASH_RADIUS = 0.024;
 const PUFF_DRAG = 3.2;
 const PUFF_RISE = 0.45;
 const SETTLE_SECONDS = 0.7;
+const WOBBLE_SECONDS = 1.5;
 
 interface Puff {
   position: Vector3;
@@ -28,6 +29,14 @@ interface Dash {
 interface Settling {
   mesh: Object3D;
   y: number;
+  age: number;
+}
+
+interface Nudged {
+  mesh: Object3D;
+  from: Vector3;
+  to: Vector3;
+  seconds: number;
   age: number;
 }
 
@@ -60,12 +69,18 @@ export function createEffects(scene: Scene) {
   let puffs: Puff[] = [];
   let dashes: Dash[] = [];
   let settling: Settling[] = [];
+  let nudged: Nudged[] = [];
   const matrix = new Matrix4();
   const scale = new Vector3();
   const none = new Quaternion();
 
   function addPuff(x: number, y: number, z: number, velocity: Vector3, radius: number, life: number) {
     if (puffs.length < MAX_PUFFS) puffs.push({ position: new Vector3(x, y, z), velocity, radius, age: 0, life });
+  }
+
+  function placeNudged({ mesh, to }: Nudged) {
+    mesh.position.copy(to);
+    mesh.rotation.x = 0;
   }
 
   return {
@@ -97,6 +112,10 @@ export function createEffects(scene: Scene) {
     /** A brick squashes as it lands, then springs back, keeping its foot on the ground. */
     settle(mesh: Object3D) {
       settling.push({ mesh, y: mesh.position.y, age: 0 });
+    },
+    /** A brick pushed along the floor to where it now stands, rocking on its foot as it stops. */
+    nudge(mesh: Object3D, to: Vector3, seconds: number) {
+      nudged.push({ mesh, from: mesh.position.clone(), to: to.clone(), seconds, age: 0 });
     },
     update(seconds: number) {
       puffs = puffs.filter((puff) => (puff.age += seconds) < puff.life);
@@ -131,10 +150,26 @@ export function createEffects(scene: Scene) {
         item.mesh.position.y = item.y + ((height - 1) * BRICK) / 2;
         return !done;
       });
+
+      nudged = nudged.filter((item) => {
+        item.age += seconds;
+        const done = item.age >= item.seconds + WOBBLE_SECONDS;
+        if (done) {
+          placeNudged(item);
+          return false;
+        }
+        const along = Math.min(item.age / item.seconds, 1);
+        const rocking = Math.max(item.age - item.seconds * 0.6, 0);
+        const rock = 0.15 * Math.exp(-3 * rocking) * Math.sin(11 * rocking);
+        item.mesh.position.lerpVectors(item.from, item.to, along ** 3 * (along * (along * 6 - 15) + 10));
+        item.mesh.position.y = item.to.y + (Math.abs(Math.sin(rock)) * BRICK) / 2;
+        item.mesh.rotation.x = rock;
+        return true;
+      });
     },
     /** Whether anything is still moving. */
     get active() {
-      return puffs.length > 0 || dashes.length > 0 || settling.length > 0;
+      return puffs.length > 0 || dashes.length > 0 || settling.length > 0 || nudged.length > 0;
     },
     /** Puts every settling brick back in its true shape and place, at once. */
     finishSettling() {
@@ -143,6 +178,8 @@ export function createEffects(scene: Scene) {
         item.mesh.position.y = item.y;
       }
       settling = [];
+      for (const item of nudged) placeNudged(item);
+      nudged = [];
     },
     clear() {
       this.finishSettling();
