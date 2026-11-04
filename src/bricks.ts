@@ -29,8 +29,31 @@ const FOOT = [0.44, 0.44] as const;
 export const MAX_REACH = 8.6;
 
 // Standing behind the name, each arm reaches a brick from behind and never crosses another letter.
-export const ROBOT_X = 8;
-export const ROBOT_Z = -3.6;
+const ROBOT_X = 8;
+const ROBOT_Z = -3.6;
+// On a tall screen the arms stand closer, with piles spread out in front of them, to use depth rather than width.
+// Their bricks start just out of the other arm's reach, so the arms still never cross.
+const TALL_ROBOT_X = 6;
+const TALL_ROBOT_Z = -2.6;
+const TALL_INNER_X = 2.7;
+const TALL_OUTER_X = 8.7;
+const TALL_NEAR_Z = 7;
+const TALL_LEAST_REACH = 2.6;
+// The name, the room a claw needs around it, and in front of it, so no pile stands in the way of reading it.
+const NAME_CLEARANCE_X = 4.6;
+const NAME_CLEARANCE_Z = 3.6;
+
+let tall = false;
+
+/** Picks the layout for bricks placed from now on. */
+export function setTallLayout(value: boolean) {
+  tall = value;
+}
+
+/** Where a robot stands in the current layout. */
+export function robotBase(side: number) {
+  return tall ? new Vector3(side * TALL_ROBOT_X, 0, TALL_ROBOT_Z) : new Vector3(side * ROBOT_X, 0, ROBOT_Z);
+}
 
 /** The same layout on every visit, so the composition stays the one that was checked. */
 function createRandom(seed: number) {
@@ -39,6 +62,8 @@ function createRandom(seed: number) {
     return seed / 4294967296;
   };
 }
+
+const LAYOUT_SEED = 11;
 
 /** One plain block: a cube of solid colour, with nothing on its faces. */
 function createBrickFactory() {
@@ -129,12 +154,32 @@ export function restsOn(top: Vector3, topYaw: number, bottom: Vector3, bottomYaw
 
 /** A random place on the floor around a robot, or nothing if this try fell out of its reach or out of the frame. */
 export function scatterPlace(side: number, random: () => number) {
+  if (tall) return tallScatterPlace(side, random);
   const position = new Vector3(side * (7.7 + random() * 8), BRICK / 2, -5.1 + random() * 10.6);
   const yaw = (random() - 0.5) * 2.6;
   const reach = Math.hypot(position.x - side * ROBOT_X, position.z - ROBOT_Z);
   if (reach < 3 || reach > MAX_REACH) return null;
   // Stays inside the frame, which narrows towards the camera.
   if (Math.abs(position.x) > 15.4 - Math.max(position.z, 0) * 0.43) return null;
+  return { position, yaw };
+}
+
+/** Whether a brick here stays on the visible floor, which narrows towards the camera. */
+export function inFrame(position: Vector3) {
+  const near = Math.max(position.z, 0);
+  if (tall) return position.z <= TALL_NEAR_Z && Math.abs(position.x) <= TALL_OUTER_X - near * 0.13;
+  return position.z <= 5.5 && Math.abs(position.x) <= 15.4 - near * 0.43;
+}
+
+function tallScatterPlace(side: number, random: () => number) {
+  const x = TALL_INNER_X + random() * (TALL_OUTER_X - TALL_INNER_X);
+  const position = new Vector3(side * x, BRICK / 2, TALL_ROBOT_Z + random() * (TALL_NEAR_Z - TALL_ROBOT_Z));
+  const yaw = (random() - 0.5) * 2.6;
+  const reach = Math.hypot(x - TALL_ROBOT_X, position.z - TALL_ROBOT_Z);
+  if (reach < TALL_LEAST_REACH || reach > MAX_REACH) return null;
+  if (x < NAME_CLEARANCE_X && Math.abs(position.z) < NAME_CLEARANCE_Z) return null;
+  // Stays inside the frame, which narrows towards the camera.
+  if (x > TALL_OUTER_X - Math.max(position.z, 0) * 0.13) return null;
   return { position, yaw };
 }
 
@@ -146,7 +191,8 @@ function scatterSpots(side: number, random: () => number) {
     const place = scatterPlace(side, random);
     if (!place) continue;
     const { position, yaw } = place;
-    const height = Math.min(random() < 0.42 ? 2 : 1, total - spots.length);
+    // The same bricks on less floor stand in taller piles.
+    const height = Math.min(tall ? 2 + Math.floor(random() * 3) : random() < 0.42 ? 2 : 1, total - spots.length);
     // Each brick in a stack sits a little askew on the one below.
     const yaws = Array.from({ length: height }, (_, level) => yaw + (level > 0 ? (random() - 0.5) * 0.5 : 0));
     const clear = spots.every((spot) =>
@@ -169,10 +215,21 @@ function scatterSpots(side: number, random: () => number) {
   return spots;
 }
 
+/** A robot's bricks' places, and the spots left empty among them. */
+function chooseSpots(side: number, random: () => number) {
+  const spots = scatterSpots(side, random);
+  const shuffled = spots
+    .map((spot) => ({ spot, order: random() }))
+    .sort((a, b) => a.order - b.order)
+    .map(({ spot }) => spot);
+  const emptySpots = shuffled.filter((spot) => !spot.above).slice(0, EMPTY_SPOTS);
+  return { emptySpots, taken: spots.filter((spot) => !emptySpots.includes(spot)) };
+}
+
 /** Creates every brick loose on the floor, and works out where each robot's part of the name goes. */
 export function addBricks(scene: Scene) {
   const makeBrick = createBrickFactory();
-  const random = createRandom(11);
+  const random = createRandom(LAYOUT_SEED);
   const columns = NAME.reduce((sum, letter) => sum + LETTERS[letter][0].length, 0) + LETTER_GAP * (NAME.length - 1);
   let column = -(columns - 1) / 2;
 
@@ -189,17 +246,12 @@ export function addBricks(scene: Scene) {
   });
 
   const crew = (slots: Vector3[], side: number): Crew => {
-    const spots = scatterSpots(side, random);
-    const shuffled = spots
-      .map((spot) => ({ spot, order: random() }))
-      .sort((a, b) => a.order - b.order)
-      .map(({ spot }) => spot);
-    const emptySpots = shuffled.filter((spot) => !spot.above).slice(0, EMPTY_SPOTS);
+    const { emptySpots, taken } = chooseSpots(side, random);
     return {
       side,
       slots,
       emptySpots,
-      bricks: spots.filter((spot) => !emptySpots.includes(spot)).map((spot) => {
+      bricks: taken.map((spot) => {
         const mesh = makeBrick(PALETTE.bricks[Math.floor(random() * PALETTE.bricks.length)]);
         mesh.position.copy(spot.position);
         mesh.rotation.y = spot.yaw;
@@ -223,4 +275,20 @@ export function addBricks(scene: Scene) {
     legs: [0, 0],
   };
   return { left, right, yard };
+}
+
+/** Lays the same bricks out again for the current layout, back at the opening. */
+export function rearrangeYard(yard: Yard, crews: Crew[]) {
+  const random = createRandom(LAYOUT_SEED);
+  yard.firstFreeSpots = crews.flatMap((crew) => {
+    const { emptySpots, taken } = chooseSpots(crew.side, random);
+    crew.bricks.forEach((brick, index) => {
+      brick.firstSpot = taken[index];
+      // The draw that picked its colour, so a layout comes out the same however it was reached.
+      random();
+    });
+    crew.emptySpots = emptySpots;
+    return emptySpots;
+  });
+  resetYard(yard);
 }

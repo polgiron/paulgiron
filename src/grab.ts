@@ -17,6 +17,8 @@ const DUST_DROP = 0.2;
 const BRICK_HALF = new Vector3(BRICK / 2, BRICK / 2, BRICK / 2);
 // Larger than the room in every direction, and thick enough that nothing can get through.
 const FAR = 500;
+// How far from a brick a fingertip still takes it, in CSS pixels.
+const TOUCH_RADIUS = 24;
 
 export interface Worker {
   builder: Builder;
@@ -80,15 +82,35 @@ export function createGrabber(canvas: HTMLCanvasElement, camera: Camera, yard: Y
     return yard.bricks.filter((other) => other !== brick && !yard.carried.has(other)).map(({ mesh }) => brickBox(mesh));
   }
 
-  /** The brick under the cursor, if it is free to take: not in a claw, and with nothing resting on it. */
+  /** Free to take: not in a claw, and with nothing resting on it. */
+  function isFree(brick: Brick) {
+    if (yard.carried.has(brick)) return false;
+    const { position, rotation } = brick.mesh;
+    return !restingBoxes(brick).some(({ center, yaw }) => restsOn(center, yaw, position, rotation.y));
+  }
+
+  /** The brick under the cursor, if it is free to take. */
   function brickAtPointer() {
     raycaster.setFromCamera(pointer, camera);
     const [hit] = raycaster.intersectObjects(meshes, false);
     const brick = hit && yard.bricks.find(({ mesh }) => mesh === hit.object);
-    if (!brick || yard.carried.has(brick)) return null;
-    const { position, rotation } = brick.mesh;
-    const covered = restingBoxes(brick).some(({ center, yaw }) => restsOn(center, yaw, position, rotation.y));
-    return covered ? null : brick;
+    return brick && isFree(brick) ? brick : null;
+  }
+
+  /** The closest free brick around a fingertip, which covers more than it can see. */
+  function brickNearPointer() {
+    const { width, height } = canvas.getBoundingClientRect();
+    let nearest: Brick | null = null;
+    let least = TOUCH_RADIUS;
+    for (const brick of yard.bricks) {
+      projected.copy(brick.mesh.position).project(camera);
+      const away = Math.hypot(((projected.x - pointer.x) * width) / 2, ((projected.y - pointer.y) * height) / 2);
+      if (away < least && isFree(brick)) {
+        nearest = brick;
+        least = away;
+      }
+    }
+    return nearest;
   }
 
   function pickUp(brick: Brick) {
@@ -196,7 +218,7 @@ export function createGrabber(canvas: HTMLCanvasElement, camera: Camera, yard: Y
     if (event.button !== 0 || !event.isPrimary || drag || fall) return;
     effects.finishSettling();
     readPointer(event);
-    const brick = brickAtPointer();
+    const brick = brickAtPointer() ?? (event.pointerType === 'touch' ? brickNearPointer() : null);
     if (!brick) return;
     canvas.setPointerCapture(event.pointerId);
     canvas.style.cursor = 'grabbing';
