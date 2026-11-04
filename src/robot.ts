@@ -250,6 +250,22 @@ export function solveReach({ angle, radius, height, yaw }: Reach): Pose {
   };
 }
 
+/** How far each link leans out from straight up, along the arm's turn. A hand leaning 0 points at the ceiling, PI at the floor. */
+export function armPose(turret: number, upper: number, forearm: number, hand: number, roll: number): Pose {
+  return { turret, shoulder: -upper, elbow: upper - forearm, wrist: forearm - hand, roll };
+}
+
+/** A pose part of the way from one to another. */
+export function mixPose(from: Pose, to: Pose, t: number): Pose {
+  return {
+    turret: from.turret + (to.turret - from.turret) * t,
+    shoulder: from.shoulder + (to.shoulder - from.shoulder) * t,
+    elbow: from.elbow + (to.elbow - from.elbow) * t,
+    wrist: from.wrist + (to.wrist - from.wrist) * t,
+    roll: from.roll + (to.roll - from.roll) * t,
+  };
+}
+
 /** 0 is wide open, 1 is closed on a brick. */
 export function setGrip(robot: Robot, closed: number) {
   const reach = FINGER_OPEN + (FINGER_CLOSED - FINGER_OPEN) * closed;

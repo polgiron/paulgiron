@@ -88,6 +88,35 @@ h1 {
   transition: transform 0.1s ease-out;
 }
 
+/* One hop when the name is finished. It runs on the scene's clock, as the robots do. */
+.contact.is-nudged {
+  transform-origin: 18% 100%;
+  animation: contact-nudge calc(2.1s / var(--scene-speed, 3)) cubic-bezier(0.3, 0, 0.3, 1);
+}
+
+.scene-paused .contact {
+  animation-play-state: paused;
+}
+
+@keyframes contact-nudge {
+  0%,
+  100% {
+    transform: none;
+  }
+  14% {
+    transform: scale(1.03, 0.96);
+  }
+  42% {
+    transform: translateY(-7px) scale(0.98, 1.03);
+  }
+  72% {
+    transform: scale(1.02, 0.98);
+  }
+  88% {
+    transform: translateY(-1.5px);
+  }
+}
+
 .contact svg {
   position: absolute;
   inset: 0;
@@ -246,5 +275,9 @@ h1 {
   .contact path,
   .controls button {
     transition: none;
+  }
+
+  .contact.is-nudged {
+    animation: none;
   }
 }

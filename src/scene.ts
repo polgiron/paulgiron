@@ -25,7 +25,7 @@ function spotlight(x: number) {
   return spot;
 }
 
-export async function startScene(canvas: HTMLCanvasElement) {
+export async function startScene(canvas: HTMLCanvasElement, onNameBuilt?: () => void) {
   const scene = new Scene();
   scene.background = new Color(PALETTE.wall);
 
@@ -51,7 +51,7 @@ export async function startScene(canvas: HTMLCanvasElement) {
     const robot = createRobot();
     robot.root.position.set(x, 0, ROBOT_Z);
     scene.add(robot.root);
-    return { robot, builder: createBuilder(robot, frontAngle, crew, largestCrew, effects, yard, index) };
+    return { robot, builder: createBuilder(robot, frontAngle, crew, largestCrew, effects, yard, index, onNameBuilt) };
   });
   const builders = workers.map(({ builder }) => builder);
   const grabber = createGrabber(canvas, camera, yard, workers, effects);
@@ -128,9 +128,11 @@ export async function startScene(canvas: HTMLCanvasElement) {
     },
     setPaused(value: boolean) {
       paused = value;
+      document.documentElement.classList.toggle('scene-paused', value);
     },
     setSpeed(value: number) {
       speed = value;
+      document.documentElement.style.setProperty('--scene-speed', String(value));
     },
     reset() {
       grabber.cancel();

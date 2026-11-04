@@ -3,8 +3,8 @@ import { BODY, BRICK, CLAW, MAX_REACH, restsOn, scatterPlace, takeOut } from './
 import type { Brick, Crew, Spot, Yard } from './bricks';
 import { rectanglesTouch } from './collisions';
 import type { Effects } from './effects';
-import { heldPosition, setGrip, setPose, solveReach } from './robot';
-import type { Reach, Robot } from './robot';
+import { armPose, heldPosition, mixPose, setGrip, setPose, solveReach } from './robot';
+import type { Pose, Reach, Robot } from './robot';
 
 // A brick's height while it travels: its bottom and the fingertips clear the top of the name.
 const TRAVEL_HEIGHT = 5.75;
@@ -12,15 +12,53 @@ const SWING_SECONDS = 3.2;
 const VERTICAL_SECONDS = 1.4;
 const GRIP_SECONDS = 0.5;
 // A moment with the finished name, each time it has been built.
-const NAME_HOLD_SECONDS = 6;
+const NAME_HOLD_SECONDS = 8;
 const EMPTY_HOLD_SECONDS = 4;
 // The arm bobs upward as it stops, never down, so the bob can't reach the name.
 const BOB_HEIGHT = 0.16;
 const DASH_MIN_SPEED = 3.5;
 const DASH_SPACING = 0.75;
+// The wave: up beside the name with the claw to the ceiling, three wags of the wrist, and back. All of it stays well above the letters.
+const WAVE_RAISE_SECONDS = 1.3;
+const WAVE_WAG_SECONDS = 3.3;
+const WAVE_LOWER_SECONDS = 1.2;
+const WAVE_WAGS = 3;
+// The second arm answers the first.
+const WAVE_LAG_SECONDS = 0.45;
+// How far round from straight at the viewer, towards the name, so the wag shows side on.
+const WAVE_TURN = 0.95;
+const WAVE_UPPER_LEAN = 0.5;
+const WAVE_FOREARM_LEAN = 1.1;
+const WAVE_HAND_LEAN = 0.18;
+// The double-take: a glance at the stolen brick, back to work, then a proper look.
+const LOOK_KEYS = [[0, 0], [0.4, 0.65], [0.75, 0.05], [1, 0.05], [1.35, 1], [1.95, 1], [2.3, 0]];
+const LOOK_TURN = 0.42;
+const LOOK_TILT = 0.4;
+const LOOK_HOP = 0.3;
+// A gesture a visitor cuts short fades out over this long, rather than the arm jumping.
+const GESTURE_FADE_SECONDS = 0.5;
+// The grab hint: an open claw comes down around a loose brick, and its back finger pushes it a little towards the viewer.
+const HINT_PUSH = 0.6;
+const HINT_PUSH_SECONDS = 0.6;
+const HINT_HEIGHT = 0.72;
+const HINT_FINGER_REACH = 0.65;
+const HINT_MIN_RADIUS = 4.5;
 
 function ease(t: number) {
   return t * t * t * (t * (t * 6 - 15) + 10);
+}
+
+function clamp(value: number, low: number, high: number) {
+  return Math.min(Math.max(value, low), high);
+}
+
+/** Where a value is along eased keys of [time, value]. */
+function along(keys: number[][], time: number) {
+  const next = keys.findIndex(([at]) => at > time);
+  if (next <= 0) return next === 0 ? keys[0][1] : keys[keys.length - 1][1];
+  const [fromTime, from] = keys[next - 1];
+  const [toTime, to] = keys[next];
+  return from + (to - from) * ease((time - fromTime) / (toTime - fromTime));
 }
 
 function randomItem<T>(items: T[]) {
@@ -43,6 +81,7 @@ export function createBuilder(
   effects: Effects,
   yard: Yard,
   index: number,
+  onNameBuilt?: () => void,
 ) {
   const { slots } = crew;
   const { bricks } = yard;
@@ -62,6 +101,12 @@ export function createBuilder(
   let sinceSwing = 99;
   let sinceDash = 0;
   let swinging = false;
+  // A gesture is a pose laid over the arm's real one. `at` always stays where the arm is working.
+  let gesturePose: Pose | null = null;
+  let gestureBlend = 0;
+  let gesturing = false;
+  let hintDone = false;
+  const calm = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   const reachOf = (point: Vector3, yaw: number, height = point.y): Reach => {
     let angle = Math.atan2(base.z - point.z, point.x - base.x);
@@ -75,7 +120,8 @@ export function createBuilder(
 
   function pose() {
     const bob = BOB_HEIGHT * Math.exp(-6 * sinceSwing) * ((1 - Math.cos(18 * sinceSwing)) / 2);
-    setPose(robot, solveReach({ ...at, height: at.height + bob }));
+    const working = solveReach({ ...at, height: at.height + bob });
+    setPose(robot, gesturePose && gestureBlend > 0 ? mixPose(working, gesturePose, gestureBlend) : working);
     if (held) {
       held.mesh.position.copy(heldPosition(robot, scratch));
       held.mesh.rotation.y = at.yaw;
@@ -284,6 +330,107 @@ export function createBuilder(
     for (let time = 0; time < seconds; time += delta) yield;
   }
 
+  /** Holds a pose worked out afresh each moment. It should start and end on the arm's working pose. */
+  function* gesture(seconds: number, shape: (time: number) => Pose) {
+    for (let time = 0; time < seconds; time += delta) {
+      gesturePose = shape(time);
+      gestureBlend = 1;
+      gesturing = true;
+      pose();
+      yield;
+    }
+    gestureBlend = 0;
+    pose();
+  }
+
+  /** A hello from up beside the finished name. The arm stays clear of the letters as it goes up and comes down again. */
+  function* wave(lag: number) {
+    yield* wait(lag);
+    const rest = solveReach(at);
+    const turret = frontAngle - crew.side * WAVE_TURN;
+    // The claw is the same either way round, so it takes the shorter way to face the viewer.
+    const roll = Math.round(rest.roll / Math.PI) * Math.PI;
+    const wagStart = WAVE_RAISE_SECONDS * 0.7;
+    const wagEnd = WAVE_RAISE_SECONDS + WAVE_WAG_SECONDS;
+    yield* gesture(wagEnd + WAVE_LOWER_SECONDS, (time) => {
+      const raised = ease(Math.min(time / WAVE_RAISE_SECONDS, 1));
+      const lowered = ease(clamp((time - wagEnd) / WAVE_LOWER_SECONDS, 0, 1));
+      const wagTime = clamp((time - wagStart) / (wagEnd - wagStart), 0, 1);
+      // The wags build and fade, and the wrist follows the forearm a beat late.
+      const swell = Math.sin(wagTime * Math.PI) ** 0.5;
+      const beat = wagTime * WAVE_WAGS * Math.PI * 2;
+      const up = armPose(
+        turret + Math.sin(beat) * 0.05 * swell,
+        WAVE_UPPER_LEAN + Math.sin(beat) * 0.025 * swell,
+        WAVE_FOREARM_LEAN + Math.sin(beat) * 0.12 * swell,
+        WAVE_HAND_LEAN + Math.sin(beat - 0.8) * 0.62 * swell,
+        roll,
+      );
+      return mixPose(rest, up, raised * (1 - lowered));
+    });
+  }
+
+  /** The arm looks round at a brick a visitor just took from under it, twice. It keeps following the brick in the hand. */
+  function* doubleTake(brick: Brick) {
+    const front = Math.max(Math.abs(at.angle - frontAngle), Math.PI / 2);
+    yield* gesture(LOOK_KEYS[LOOK_KEYS.length - 1][0], (time) => {
+      const look = along(LOOK_KEYS, time);
+      const { position } = brick.mesh;
+      const seen = reachOf(position, 0);
+      let turn = seen.angle - at.angle;
+      if (turn > Math.PI) turn -= Math.PI * 2;
+      if (turn < -Math.PI) turn += Math.PI * 2;
+      // Never round to where the arm would reach the back wall.
+      const angle = clamp(at.angle + clamp(turn, -LOOK_TURN, LOOK_TURN) * look, frontAngle - front, frontAngle + front);
+      const looking = solveReach({ ...at, angle, height: at.height + LOOK_HOP * Math.max(look - 0.65, 0) / 0.35 });
+      // A held brick has to stay level, so only an empty claw tips towards what it sees.
+      if (!held) looking.wrist += Math.sign(seen.radius - at.radius) * LOOK_TILT * look;
+      return looking;
+    });
+  }
+
+  /** Where the hint could push this brick, if the arm has room for it there. */
+  function hintPush(brick: Brick) {
+    const { position, rotation } = brick.mesh;
+    if (position.y > BRICK) return null;
+    if (Math.hypot(position.x - base.x, position.z - base.z) < HINT_MIN_RADIUS) return null;
+    const to = position.clone().setZ(position.z + HINT_PUSH);
+    const inReach = canReach(to) && to.z < 5.5 && Math.abs(to.x) <= 15.4 - to.z * 0.43;
+    if (!inReach || isBlocked(to, rotation.y, brick) || !clawFits(to, rotation.y, brick)) return null;
+    // The back finger starts against the brick's back corner, the claw's front finger well past it.
+    const depth = (BRICK / 2) * (Math.abs(Math.cos(rotation.y)) + Math.abs(Math.sin(rotation.y)));
+    const hand = position.clone().setY(HINT_HEIGHT).setZ(position.z + HINT_FINGER_REACH - depth);
+    const mid = hand.clone().setZ(hand.z + HINT_PUSH / 2);
+    return clawFits(mid, 0, brick) ? { to, hand } : null;
+  }
+
+  /** Once a visit: pushes a loose brick a little towards the viewer, to show that the bricks can be moved. */
+  function* grabHint() {
+    if (hintDone || calm.matches) return;
+    const candidates = pickableBricks()
+      .map((brick) => ({ brick, push: hintPush(brick) }))
+      .filter(({ push }) => push)
+      .sort((a, b) => b.brick.mesh.position.z - a.brick.mesh.position.z);
+    const [choice] = candidates;
+    if (!choice?.push) return;
+    hintDone = true;
+    const { brick, push } = choice;
+    const { to, hand } = push;
+    const yaw = brick.mesh.rotation.y;
+    yard.moves[index] = { brick, to, yaw };
+    yield* swingTo(reachOf(hand, 0, TRAVEL_HEIGHT));
+    yield* moveTo(reachOf(hand, 0), VERTICAL_SECONDS);
+    // From here the brick already stands where it is going, and the effect only catches its mesh up.
+    takeOut(yard, brick);
+    stand(brick, { position: to, yaw });
+    yard.moves[index] = null;
+    effects.nudge(brick.mesh, to, HINT_PUSH_SECONDS);
+    const pushed = hand.clone().setZ(hand.z + HINT_PUSH);
+    yield* moveTo(reachOf(pushed, 0), HINT_PUSH_SECONDS);
+    yield* wait(0.7);
+    yield* moveTo(reachOf(pushed, 0, TRAVEL_HEIGHT), VERTICAL_SECONDS);
+  }
+
   function* moveLooseBrick(brick: Brick, spot: Spot) {
     yield* carry(brick, spot.position, spot.yaw, () => stand(brick, spot));
   }
@@ -350,6 +497,7 @@ export function createBuilder(
       yield* carry(brick, target, 0, () => {
         brick.slot = target;
       });
+      if (index === 0) yield* grabHint();
     }
   }
 
@@ -382,7 +530,14 @@ export function createBuilder(
         yield* build();
         yield* meet();
         building = false;
-        yield* wait(NAME_HOLD_SECONDS);
+        if (calm.matches) {
+          yield* wait(NAME_HOLD_SECONDS);
+          continue;
+        }
+        if (index === 0) onNameBuilt?.();
+        const lag = index * WAVE_LAG_SECONDS;
+        yield* wave(lag);
+        yield* wait(NAME_HOLD_SECONDS - lag - WAVE_RAISE_SECONDS - WAVE_WAG_SECONDS - WAVE_LOWER_SECONDS);
       } else {
         yield* unbuild();
         yield* meet();
@@ -394,11 +549,12 @@ export function createBuilder(
   let script = forever();
 
   /** Drops the move under way after a visitor upset it: lets go or puts down what it holds, then plans afresh. */
-  function* recover(): Generator<void, void, void> {
+  function* recover(stolen: Brick | null = null): Generator<void, void, void> {
     yard.moves[index] = null;
     swinging = false;
     if (!held && gripped > 0) yield* grip(gripped, 0);
     if (at.height < TRAVEL_HEIGHT) yield* moveTo({ ...at, height: TRAVEL_HEIGHT }, VERTICAL_SECONDS);
+    if (stolen && !calm.matches) yield* doubleTake(stolen);
     if (held) {
       const brick = held;
       const spot = spotFor(brick);
@@ -411,14 +567,20 @@ export function createBuilder(
   return {
     update(seconds: number) {
       delta = seconds;
+      gesturing = false;
       script.next();
+      // Whatever replaced a gesture part way through, the arm eases back from it.
+      if (!gesturing && gestureBlend > 0) {
+        gestureBlend = Math.max(gestureBlend - seconds / GESTURE_FADE_SECONDS, 0);
+        pose();
+      }
     },
     /** A visitor has picked a brick up, maybe the one this arm was going for or meaning to stand on. */
     taken(brick: Brick) {
       const move = yard.moves[index];
       if (!move) return;
       const { position, rotation } = brick.mesh;
-      if ((!held && move.brick === brick) || restsOn(move.to, move.yaw, position, rotation.y)) script = recover();
+      if ((!held && move.brick === brick) || restsOn(move.to, move.yaw, position, rotation.y)) script = recover(brick);
     },
     /** A visitor's brick has landed, maybe on what this arm was going for or where it was going. */
     moved(brick: Brick) {
@@ -440,6 +602,7 @@ export function createBuilder(
       at = start;
       sinceSwing = 99;
       swinging = false;
+      gestureBlend = 0;
       setGrip(robot, 0);
       pose();
       script = forever();
@@ -456,6 +619,7 @@ export function createBuilder(
         brick.mesh.rotation.y = 0;
       }
       at = reachOf(slots[slots.length - 1], 0, TRAVEL_HEIGHT);
+      gestureBlend = 0;
       pose();
       building = false;
       yard.legs[index] = 1;
