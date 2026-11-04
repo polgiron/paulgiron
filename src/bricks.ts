@@ -164,6 +164,13 @@ export function scatterPlace(side: number, random: () => number) {
   return { position, yaw };
 }
 
+/** Whether a brick here stays on the visible floor, which narrows towards the camera. */
+export function inFrame(position: Vector3) {
+  const near = Math.max(position.z, 0);
+  if (tall) return position.z <= TALL_NEAR_Z && Math.abs(position.x) <= TALL_OUTER_X - near * 0.13;
+  return position.z <= 5.5 && Math.abs(position.x) <= 15.4 - near * 0.43;
+}
+
 function tallScatterPlace(side: number, random: () => number) {
   const x = TALL_INNER_X + random() * (TALL_OUTER_X - TALL_INNER_X);
   const position = new Vector3(side * x, BRICK / 2, TALL_ROBOT_Z + random() * (TALL_NEAR_Z - TALL_ROBOT_Z));

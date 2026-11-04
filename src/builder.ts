@@ -1,5 +1,5 @@
 import { Vector3 } from 'three/webgpu';
-import { BODY, BRICK, CLAW, MAX_REACH, restsOn, scatterPlace, takeOut } from './bricks';
+import { BODY, BRICK, CLAW, inFrame, MAX_REACH, restsOn, scatterPlace, takeOut } from './bricks';
 import type { Brick, Crew, Spot, Yard } from './bricks';
 import { rectanglesTouch } from './collisions';
 import type { Effects } from './effects';
@@ -25,11 +25,12 @@ const WAVE_LOWER_SECONDS = 1.2;
 const WAVE_WAGS = 3;
 // The second arm answers the first.
 const WAVE_LAG_SECONDS = 0.45;
-// How far round from straight at the viewer, towards the name, so the wag shows side on.
-const WAVE_TURN = 0.95;
 const WAVE_UPPER_LEAN = 0.5;
 const WAVE_FOREARM_LEAN = 1.1;
 const WAVE_HAND_LEAN = 0.18;
+// How far out the raised claw is from its base, and how near the room's centre it may come, so the two arms never meet.
+const WAVE_REACH = 7.25;
+const WAVE_CLEARANCE = 2.1;
 // The double-take: a glance at the stolen brick, back to work, then a proper look.
 const LOOK_KEYS = [[0, 0], [0.4, 0.65], [0.75, 0.05], [1, 0.05], [1.35, 1], [1.95, 1], [2.3, 0]];
 const LOOK_TURN = 0.42;
@@ -347,7 +348,8 @@ export function createBuilder(
   function* wave(lag: number) {
     yield* wait(lag);
     const rest = solveReach(at);
-    const turret = frontAngle - crew.side * WAVE_TURN;
+    // Round from straight at the viewer towards the name, so the wag shows side on, as far as the other arm allows.
+    const turret = frontAngle - crew.side * Math.asin((Math.abs(base.x) - WAVE_CLEARANCE) / WAVE_REACH);
     // The claw is the same either way round, so it takes the shorter way to face the viewer.
     const roll = Math.round(rest.roll / Math.PI) * Math.PI;
     const wagStart = WAVE_RAISE_SECONDS * 0.7;
@@ -395,7 +397,7 @@ export function createBuilder(
     if (position.y > BRICK) return null;
     if (Math.hypot(position.x - base.x, position.z - base.z) < HINT_MIN_RADIUS) return null;
     const to = position.clone().setZ(position.z + HINT_PUSH);
-    const inReach = canReach(to) && to.z < 5.5 && Math.abs(to.x) <= 15.4 - to.z * 0.43;
+    const inReach = canReach(to) && inFrame(to);
     if (!inReach || isBlocked(to, rotation.y, brick) || !clawFits(to, rotation.y, brick)) return null;
     // The back finger starts against the brick's back corner, the claw's front finger well past it.
     const depth = (BRICK / 2) * (Math.abs(Math.cos(rotation.y)) + Math.abs(Math.sin(rotation.y)));
