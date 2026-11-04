@@ -19,6 +19,10 @@ const BRICK_HALF = new Vector3(BRICK / 2, BRICK / 2, BRICK / 2);
 const FAR = 500;
 // How far from a brick a fingertip still takes it, in CSS pixels.
 const TOUCH_RADIUS = 24;
+// How long a brick has to stay in hand before an arm comes for it, so that a plain click disturbs nobody.
+const CHASE_DELAY_SECONDS = 0.4;
+// How much further an arm with its claw full counts as being, as it has to put that brick down first.
+const BUSY_ARM_PENALTY = 5;
 
 export interface Worker {
   builder: Builder;
@@ -68,6 +72,8 @@ export function createGrabber(canvas: HTMLCanvasElement, camera: Camera, yard: Y
   const calm = window.matchMedia('(prefers-reduced-motion: reduce)');
   let drag: Drag | null = null;
   let fall: Fall | null = null;
+  let chaser: Worker | null = null;
+  let heldFor = 0;
 
   /** The screen's edge is the only limit on the cursor, even with the pointer captured outside it. */
   function readPointer(event: PointerEvent) {
@@ -125,15 +131,30 @@ export function createGrabber(canvas: HTMLCanvasElement, camera: Camera, yard: Y
       aim: new Vector2(projected.x - pointer.x, projected.y - pointer.y),
     };
     yard.grabbed = brick;
+    heldFor = 0;
     takeOut(yard, brick);
     for (const { builder } of workers) builder.taken(brick);
+  }
+
+  /** Sends the arm best placed after the brick in hand. */
+  function setChaser({ brick }: Drag) {
+    const cost = ({ builder, robot }: Worker) =>
+      robot.root.position.distanceTo(brick.mesh.position) + (builder.carrying ? BUSY_ARM_PENALTY : 0);
+    chaser = workers.reduce((best, worker) => (cost(worker) < cost(best) ? worker : best));
+    chaser.builder.chase(brick, () => {
+      drag = null;
+      chaser = null;
+      yard.grabbed = null;
+      canvas.style.cursor = '';
+    });
   }
 
   function follow({ brick, box, aim }: Drag, seconds: number) {
     const resting = restingBoxes(brick);
     const still = [...resting, ...ROOM];
     const moving = [
-      ...workers.flatMap(({ robot }) => robotBoxes(robot)),
+      // The chasing claw is the one thing that closes around the brick rather than shoving it. It comes last in the list.
+      ...workers.flatMap((worker) => (worker === chaser ? robotBoxes(worker.robot).slice(0, -1) : robotBoxes(worker.robot))),
       ...[...yard.carried].map(({ mesh }) => brickBox(mesh)),
     ];
     for (const part of moving) pushApart(box, part, still);
@@ -183,6 +204,8 @@ export function createGrabber(canvas: HTMLCanvasElement, camera: Camera, yard: Y
     if (!drag) return;
     // Catches up with the cursor first, so a quick flick lands where it was aimed.
     follow(drag, Infinity);
+    chaser?.builder.stopChase();
+    chaser = null;
     const { brick, box, start, slot } = drag;
     const to = restingPlace(drag);
     drag = null;
@@ -244,6 +267,7 @@ export function createGrabber(canvas: HTMLCanvasElement, camera: Camera, yard: Y
     },
     letGo,
     update(seconds: number) {
+      if (drag && !chaser && (heldFor += seconds) >= CHASE_DELAY_SECONDS) setChaser(drag);
       if (drag) follow(drag, seconds);
       if (fall) drop(fall, seconds);
     },
@@ -251,6 +275,7 @@ export function createGrabber(canvas: HTMLCanvasElement, camera: Camera, yard: Y
     cancel() {
       drag = null;
       fall = null;
+      chaser = null;
       canvas.style.cursor = '';
     },
   };
