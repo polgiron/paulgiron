@@ -45,6 +45,21 @@ const HINT_HEIGHT = 0.72;
 const HINT_FINGER_REACH = 0.65;
 const HINT_MIN_RADIUS = 4.5;
 
+// The chase after a brick in a visitor's hand: how keenly the claw follows it, once it has built up to that over the ramp.
+const QUARRY_RATE = 0.7;
+const QUARRY_RAMP_SECONDS = 2;
+const QUARRY_MAX_TURN = 1.9;
+const QUARRY_MIN_RADIUS = 2.6;
+// Further than an arm reaches in its work, as it lunges rather than lifts. Beyond this, a brick is safe.
+const QUARRY_MAX_RADIUS = 9.8;
+// The claw stays at travel height until it nears the brick, then comes down onto it this steeply.
+const QUARRY_SWOOP = 2.5;
+// The claw snaps shut this close to the brick, and has it if the brick is still this close once shut.
+const SNAP_DISTANCE = 0.35;
+const CATCH_DISTANCE = 0.5;
+// Each arm chases on its own side only, so that the two never tangle.
+const QUARRY_NEAREST_MIDDLE = 0.6;
+
 function ease(t: number) {
   return t * t * t * (t * (t * 6 - 15) + 10);
 }
@@ -94,6 +109,7 @@ export function createBuilder(
   const across = new Vector3();
   const dashAt = new Vector3();
   const towardCamera = new Vector3(0, 0, 1);
+  const aim = new Vector3();
   let movesMade = 0;
   let delta = 0;
   let held: Brick | null = null;
@@ -107,6 +123,7 @@ export function createBuilder(
   let gestureBlend = 0;
   let gesturing = false;
   let hintDone = false;
+  let quarry: Brick | null = null;
   const calm = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   const reachOf = (point: Vector3, yaw: number, height = point.y): Reach => {
@@ -550,6 +567,86 @@ export function createBuilder(
   }
   let script = forever();
 
+  /** Puts the arm one frame closer to the brick, keener the longer it has been going. */
+  function follow({ mesh }: Brick, time: number) {
+    aim.copy(mesh.position);
+    aim.x = crew.side * Math.max(crew.side * aim.x, QUARRY_NEAREST_MIDDLE);
+    heldPosition(robot, tip);
+    const away = Math.hypot(tip.x - aim.x, tip.z - aim.z);
+    const target = reachOf(aim, 0);
+    const angle = clamp(target.angle, frontAngle - QUARRY_MAX_TURN, frontAngle + QUARRY_MAX_TURN);
+    const radius = clamp(target.radius, QUARRY_MIN_RADIUS, QUARRY_MAX_RADIUS);
+    const height = aim.y + Math.min(away * QUARRY_SWOOP, Math.max(TRAVEL_HEIGHT - aim.y, 0));
+    // A cube can be gripped by either pair of faces, so the claw takes the shorter way round.
+    const yaw = mesh.rotation.y + Math.round((at.yaw - mesh.rotation.y) / (Math.PI / 2)) * (Math.PI / 2);
+    const closer = 1 - Math.exp(-QUARRY_RATE * Math.min(time / QUARRY_RAMP_SECONDS, 1) * delta);
+    at = {
+      angle: at.angle + (angle - at.angle) * closer,
+      radius: at.radius + (radius - at.radius) * closer,
+      height: at.height + (height - at.height) * closer,
+      yaw: at.yaw + (yaw - at.yaw) * closer,
+    };
+    sinceSwing += delta;
+    pose();
+    trail();
+  }
+
+  /** Goes after a brick in a visitor's hand with an open claw, snapping at it when near, until it has it or the visitor lets go. */
+  function* chase(brick: Brick, onCatch: () => void): Generator<void, void, void> {
+    yard.moves[index] = null;
+    swinging = false;
+    if (held) {
+      const carried = held;
+      const spot = spotFor(carried);
+      yard.moves[index] = { brick: carried, to: spot.position, yaw: spot.yaw };
+      yield* place(carried, spot.position, spot.yaw, () => stand(carried, spot));
+    } else if (gripped > 0) {
+      yield* grip(gripped, 0);
+    }
+    if (at.height < TRAVEL_HEIGHT) yield* moveTo({ ...at, height: TRAVEL_HEIGHT }, VERTICAL_SECONDS);
+
+    heldPosition(robot, lastTip);
+    swinging = true;
+    let closing = false;
+    for (let time = 0; quarry === brick; time += delta) {
+      follow(brick, time);
+      const near = tip.distanceTo(brick.mesh.position);
+      if (closing || (gripped === 0 && near < SNAP_DISTANCE)) {
+        closing = true;
+        gripped = Math.min(gripped + delta / GRIP_SECONDS, 1);
+        if (gripped === 1) {
+          if (near < CATCH_DISTANCE) {
+            yield* snatch(brick, onCatch);
+            return;
+          }
+          closing = false;
+        }
+      } else {
+        gripped = Math.max(gripped - delta / GRIP_SECONDS, 0);
+      }
+      setGrip(robot, gripped);
+      yield;
+    }
+    yield* recover();
+  }
+
+  /** Takes the brick out of the visitor's hand and puts it away, with a puff to mark the theft. */
+  function* snatch(brick: Brick, onCatch: () => void) {
+    swinging = false;
+    quarry = null;
+    onCatch();
+    effects.dust(brick.mesh.position);
+    held = brick;
+    yard.carried.add(brick);
+    setGrip(robot, 1);
+    pose();
+    yield* moveTo({ ...at, height: Math.max(at.height, TRAVEL_HEIGHT) }, VERTICAL_SECONDS);
+    const spot = spotFor(brick);
+    yard.moves[index] = { brick, to: spot.position, yaw: spot.yaw };
+    yield* place(brick, spot.position, spot.yaw, () => stand(brick, spot));
+    yield* forever();
+  }
+
   /** Drops the move under way after a visitor upset it: lets go or puts down what it holds, then plans afresh. */
   function* recover(stolen: Brick | null = null): Generator<void, void, void> {
     yard.moves[index] = null;
@@ -584,6 +681,20 @@ export function createBuilder(
       const { position, rotation } = brick.mesh;
       if ((!held && move.brick === brick) || restsOn(move.to, move.yaw, position, rotation.y)) script = recover(brick);
     },
+    /** Whether a brick is in this claw. */
+    get carrying() {
+      return held !== null;
+    },
+    /** Sets the arm after a brick in a visitor's hand. It calls onCatch the moment it has it. */
+    chase(brick: Brick, onCatch: () => void) {
+      if (calm.matches) return;
+      quarry = brick;
+      script = chase(brick, onCatch);
+    },
+    /** The visitor has let go: the arm gives up and goes back to work. */
+    stopChase() {
+      quarry = null;
+    },
     /** A visitor's brick has landed, maybe on what this arm was going for or where it was going. */
     moved(brick: Brick) {
       const move = yard.moves[index];
@@ -598,6 +709,7 @@ export function createBuilder(
     /** Back to the opening, with the arm over its first brick. */
     reset() {
       held = null;
+      quarry = null;
       building = true;
       gripped = 0;
       movesMade = 0;
